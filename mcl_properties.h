@@ -1,0 +1,4 @@
+#ifndef MCL_PROPERTIES_H
+#define MCL_PROPERTIES_H
+
+#endif // MCL_PROPERTIES_H
