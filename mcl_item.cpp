@@ -22,7 +22,14 @@ void RobotItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->setPen(Qt::red);
     for(auto d: linePoints)
     {
-        painter->drawEllipse(belief_pos + QPointF(d.x(), d.y()), 5, 5);
+        QRectF particle_(-5, -5, 10, 10);
+        double point_x = c*d.x()-s*d.y();
+        double point_y = s*d.x()+c*d.y();
+        particle_.translate(belief_pos + QPointF(point_x, point_y));
+//        painter->drawEllipse(QPointF(point_x, point_y), 5, 5);
+//        painter->setPen(Qt::blue);
+        painter->drawEllipse(particle_);
+//        painter->drawEllipse(d, 5,5);
     }
 
     //robot
@@ -37,12 +44,14 @@ void RobotItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
     double len_y = tan(fov_horizontal)*(FIELD_WIDTH/2+20);
-    double len_x = belief_pos.x() + (FIELD_WIDTH/2+20);
-    double rot_lx1 = c*len_x-s*(belief_pos.y() +len_y);
-    double rot_ly1 = s*len_x+c*(belief_pos.y() +len_y);
-    double rot_lx2 = c*len_x-s*(belief_pos.y() -len_y);
-    double rot_ly2 = s*len_x+c*(belief_pos.y() -len_y);
-    QPolygonF fov; fov << QPoint(belief_pos.x(),belief_pos.y()) << QPoint(rot_lx1,rot_ly1) << QPoint(rot_lx2, rot_ly2);
+    double len_x = (FIELD_WIDTH/2+20);
+    double rot_lx1 = c*len_x-s*(len_y);
+    double rot_ly1 = s*len_x+c*(len_y);
+    double rot_lx2 = c*len_x-s*(-len_y);
+    double rot_ly2 = s*len_x+c*(-len_y);
+    QPolygonF fov; fov << QPoint(belief_pos.x(),belief_pos.y())
+                       << QPoint(belief_pos.x(),belief_pos.y()) + QPoint(rot_lx1,rot_ly1)
+                       << QPoint(belief_pos.x(),belief_pos.y()) + QPoint(rot_lx2, rot_ly2);
     painter->setOpacity(0.5);
     painter->drawPolygon(fov);
 }

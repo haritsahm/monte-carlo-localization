@@ -15,8 +15,8 @@ void MCL::init()
     cv::rectangle(field, cv::Rect(FIELD_WIDTH+BORDER-100, BORDER+50, 100, 500), cv::Scalar(255));
     cv::rectangle(field, cv::Rect(BORDER-60, 170+BORDER, 60, 260), cv::Scalar(255));
     cv::rectangle(field, cv::Rect(FIELD_WIDTH+BORDER, 170+BORDER, 60, 260), cv::Scalar(255));
-    cv::line(field, cv::Point(FIELD_WIDTH/2+BORDER, BORDER), cv::Point(FIELD_WIDTH/2+BORDER, FIELD_HEIGHT+BORDER), cv::Scalar(255));
-    cv::circle(field, cv::Point(FIELD_WIDTH/2+BORDER, FIELD_HEIGHT/2+BORDER), 75, cv::Scalar(255));
+    cv::line(field, cv::Point((FIELD_WIDTH/2)+BORDER, BORDER), cv::Point((FIELD_WIDTH/2)+BORDER, FIELD_HEIGHT+BORDER), cv::Scalar(255));
+    cv::circle(field, cv::Point((FIELD_WIDTH/2)+BORDER, (FIELD_HEIGHT/2)+BORDER), 75, cv::Scalar(255));
 
     robot_pos = cv::Point3d(0,0,0);
 
@@ -47,7 +47,7 @@ void MCL::updatePose(double x, double y, double deg)
 {
     robot_pos.x = x;
     robot_pos.y = y;
-    robot_pos.z = deg * M_PI/180;
+    robot_pos.z = deg;
 
 }
 
@@ -93,6 +93,9 @@ void MCL::updatePercetion()
 #endif
     std::vector<QPointF> linePoints;
     std::vector<SensorData> linePoints_;
+
+    double c = cos(robot_pos.z * DEGREE2RADIAN);
+    double s = sin(robot_pos.z * DEGREE2RADIAN);
     for(int i = 0; i < scan_Points.size(); i++)
     {
         cv::LineIterator it(field, scan_Points[i].first, scan_Points[i].second, 8);
@@ -109,18 +112,19 @@ void MCL::updatePercetion()
         for(int i = 0; i < it.count; i++, ++it)
             if(field.at<uchar>(it.pos()) == 255)
             {
-                double dx = it.pos().x - (CENTERX + robot_pos.x); double dy = (CENTERY - robot_pos.y) - it.pos().y;
+                double dx = it.pos().x - (CENTERX + robot_pos.x);
+                double dy = (CENTERY - robot_pos.y) - it.pos().y;
+                double point_x = c*dx + s*dy;
+                double point_y = -s*dx + c*dy;
 #ifdef DEBUG_MAT
-                double c = cos(robot_pos.z* M_PI/180);
-                double s = sin(robot_pos.z * M_PI/180);
-                double world_x = c*dx-s*dy+(CENTERX + robot_pos.x);
-                double world_y = (CENTERY - robot_pos.y) - (s*dx+c*dy);
-//                cv::circle(alpha, cv::Point(world_x, world_y), 5, cv::Scalar(255));
-                cv::circle(alpha, cv::Point((CENTERX + robot_pos.x) + dx, (CENTERY - robot_pos.y) - dy), 5, cv::Scalar(255));
+                double world_x = c*point_x-s*point_y+(CENTERX + robot_pos.x);
+                double world_y = (CENTERY - robot_pos.y) - (s*point_x+c*point_y);
+                cv::circle(alpha, cv::Point(world_x, world_y), 5, cv::Scalar(255));
+                //cv::circle(alpha, cv::Point((CENTERX + robot_pos.x) + dx, (CENTERY - robot_pos.y) - dy), 5, cv::Scalar(255));
 
 #endif
-                linePoints.push_back(QPointF(dx, dy));
-                linePoints_.push_back(std::make_pair(dx, dy));
+                linePoints.push_back(QPointF(point_x, point_y));
+                linePoints_.push_back(std::make_pair(point_x, point_y));
             }
     }
 
@@ -131,42 +135,46 @@ void MCL::updatePercetion()
     cv::waitKey(1);
 #endif
 
-    int num_points = linePoints_.size();
-    double sum_weight = 0;
+        int num_points = linePoints_.size();
+        double sum_weight = 0;
 
-    for(auto &p : particles)
-    {
-        double err_sum = 0;
-        double p_weight = 1;
-        for(auto d : linePoints_)
+        for(auto &p : particles)
         {
-            double angle_rad = w(p) * DEGREE2RADIAN;
-            double c = cos(angle_rad);
-            double s = sin(angle_rad);
-            double world_x = c*x(d)-s*y(d)+x(p);
-            double world_y = s*x(d)+c*y(d)+y(p);
-            double distance = field_weight.distance(world_x,world_y);
-            if(distance<0.01)
-              distance = 0.01;
-            err_sum += distance;
+            double err_sum = 0;
+            double prob = 1;
+            double p_weight = 1;
+            for(auto d : linePoints_)
+            {
+                double angle_rad = w(p) * DEGREE2RADIAN;
+                double c = cos(angle_rad);
+                double s = sin(angle_rad);
+                double world_x = c*x(d)-s*y(d)+x(p);
+                double world_y = s*x(d)+c*y(d)+y(p);
+                double distance = field_weight.distance(world_x,world_y);
+                //            prob *= exp((-distance)/(2*0.1*0.1));
+                double pt_distance = sqrt(x(d)*x(d)+y(d)*y(d));
+                if(pt_distance<0.0)
+                    pt_distance = 1.0;
+                if(distance<0.01)
+                    distance = 0.01;
+                err_sum += distance*distance*pt_distance;
+            }
+            if(err_sum > 0)
+                p_weight = 1/(err_sum);
+
+            if(num_points > 0)
+                p_weight /= num_points;
+
+            weight(p) = p_weight;
+            sum_weight += p_weight;
         }
 
-        if(err_sum > 0)
-            p_weight = 1/(err_sum);
+        //normalization, sum of every weight = 1
+        if(sum_weight > 0)
+            for(auto& p : particles)
+                weight(p) /= sum_weight;
 
-        if(num_points > 0)
-            p_weight /= num_points;
-
-        weight(p) = p_weight;
-        sum_weight += p_weight;
-    }
-
-    //sum of every weight = 1
-    if(sum_weight > 0)
-        for(auto& p : particles)
-            weight(p) /= sum_weight;
-
-    lowVarResampling();
+        lowVarResampling();
 
 
 }
@@ -184,6 +192,8 @@ void MCL::lowVarResampling()
 
     double mean_x = 0;
     double mean_y = 0;
+    double sin_ = 0, cos_ = 0;
+    double orien = 0;
 
     for(int j = 0; j < N_Particle; j++)
     {
@@ -196,14 +206,27 @@ void MCL::lowVarResampling()
         if(weight(particles[id]) > weight(best_estimate))
             best_estimate = particles[id];
 
-        mean_x += (1/N_Particle)*x(particles[id]);
-        mean_y += (1/N_Particle)*y(particles[id]);
+        //        mean_x += 1/N_Particle*x(particles[id]);
+        //        mean_y += 1/N_Particle*y(particles[id]);
         new_list.push_back(particles[id]);
     }
 
-    x(mean_estimate) = x(best_estimate);
-    y(mean_estimate) = y(best_estimate);
-    w(mean_estimate) = w(best_estimate);
+    for(auto &p : particles)
+    {
+        mean_x += x(p);
+        mean_y += y(p);
+        double deg = w(p) * M_PI/180;
+        sin_ += sin(deg);
+        cos_ += cos(deg);
+    }
+
+    mean_x /= N_Particle;
+    mean_y /= N_Particle;
+    orien = atan2(sin_,cos_)*180/M_PI;
+
+    x(mean_estimate) = mean_x;
+    y(mean_estimate) = mean_y;
+    w(mean_estimate) = orien;
 
     particles = new_list;
 
@@ -254,12 +277,12 @@ void MCL::FieldMatrix::loadData(std::string path)
 
 double MCL::FieldMatrix::distance(double x, double y)
 {
-    int x_ = (int)x;
-    int y_ = (int)y;
-    if(((x_ > 0) && (x_ < MATWIDTH)) && ((y_ > 0) && (y_ < MATHEIGHT)))
+    int x_ = (int)x+CENTERX;
+    int y_ = CENTERY-(int)y;
+    if(((x_ > 0) && (x_ <= MATWIDTH)) && ((y_ > 0) && (y_ <= MATHEIGHT)))
         return distance_matrix[y_*MATWIDTH+x_];
     else
     {
-        return 0;
+        return 200;
     }
 }

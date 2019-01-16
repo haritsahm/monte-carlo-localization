@@ -51,7 +51,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 
     ui->setupUi(this);
     scene = new QGraphicsScene(this);
-    scene->setSceneRect(-FIELD_WIDTH/2-BORDER, -FIELD_HEIGHT/2-BORDER, FIELD_WIDTH + 2*BORDER, FIELD_HEIGHT + 2*BORDER);
+    scene->setSceneRect((-FIELD_WIDTH/2)-BORDER, (-FIELD_HEIGHT/2)-BORDER, FIELD_WIDTH + (2*BORDER), FIELD_HEIGHT + (2*BORDER));
     ui->graphicsView->setScene(scene);
     ui->graphicsView->scale(0.5, 0.5);
     ui->graphicsView->scene()->addItem(field);
@@ -163,7 +163,7 @@ void MainWindow::updateRobotPose()
     setPosition();
     emit updatePose(pos_x, pos_y, pos_theta);
 
-    double posx = CENTERX + pos_x; if(posx < 0) posx = 0; else if (posx > MATWIDTH) posx = MATWIDTH;
+    double posx = CENTERX + pos_x; if(posx < 0) posx = 0; if (posx > MATWIDTH) posx = MATWIDTH;
     double posy =  CENTERY - pos_y; if(posy < 0) posy = 0; if(posy > MATHEIGHT) posy = MATHEIGHT;
 
     std::vector<std::pair<cv::Point, cv::Point> > scanPoints;
@@ -193,7 +193,7 @@ void MainWindow::updateRobotPose()
         scanPoints.push_back(std::make_pair(cv::Point(point1x, point1y), cv::Point(point2x, point2y)));
     }
 
-    for(int deg = 1; deg < 35; deg+=RAD_SCAN)
+    for(int deg = 0; deg < 35; deg+=RAD_SCAN)
     {
         double x1 = rad;
         double y1 = -tan(deg*M_PI/180)*rad;
