@@ -16,10 +16,7 @@
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QRadioButton>
-#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -29,19 +26,13 @@ class Ui_MainWindow
 public:
     QWidget *centralWidget;
     QGraphicsView *graphicsView;
-    QWidget *verticalLayoutWidget;
-    QVBoxLayout *verticalLayout;
-    QRadioButton *radioButton;
-    QRadioButton *radioButton_2;
-    QPushButton *refresh_button;
-    QPushButton *start_button;
-    QStatusBar *statusBar;
+    QMenuBar *menuBar;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(688, 461);
+        MainWindow->resize(579, 461);
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -61,38 +52,11 @@ public:
         graphicsView->setSizePolicy(sizePolicy);
         graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        verticalLayoutWidget = new QWidget(centralWidget);
-        verticalLayoutWidget->setObjectName(QStringLiteral("verticalLayoutWidget"));
-        verticalLayoutWidget->setGeometry(QRect(580, 10, 102, 104));
-        verticalLayout = new QVBoxLayout(verticalLayoutWidget);
-        verticalLayout->setSpacing(6);
-        verticalLayout->setContentsMargins(11, 11, 11, 11);
-        verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
-        verticalLayout->setContentsMargins(0, 0, 0, 0);
-        radioButton = new QRadioButton(verticalLayoutWidget);
-        radioButton->setObjectName(QStringLiteral("radioButton"));
-
-        verticalLayout->addWidget(radioButton);
-
-        radioButton_2 = new QRadioButton(verticalLayoutWidget);
-        radioButton_2->setObjectName(QStringLiteral("radioButton_2"));
-
-        verticalLayout->addWidget(radioButton_2);
-
-        refresh_button = new QPushButton(verticalLayoutWidget);
-        refresh_button->setObjectName(QStringLiteral("refresh_button"));
-
-        verticalLayout->addWidget(refresh_button);
-
-        start_button = new QPushButton(verticalLayoutWidget);
-        start_button->setObjectName(QStringLiteral("start_button"));
-
-        verticalLayout->addWidget(start_button);
-
         MainWindow->setCentralWidget(centralWidget);
-        statusBar = new QStatusBar(MainWindow);
-        statusBar->setObjectName(QStringLiteral("statusBar"));
-        MainWindow->setStatusBar(statusBar);
+        menuBar = new QMenuBar(MainWindow);
+        menuBar->setObjectName(QStringLiteral("menuBar"));
+        menuBar->setGeometry(QRect(0, 0, 579, 19));
+        MainWindow->setMenuBar(menuBar);
 
         retranslateUi(MainWindow);
 
@@ -102,10 +66,6 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
-        radioButton->setText(QApplication::translate("MainWindow", "A*", Q_NULLPTR));
-        radioButton_2->setText(QApplication::translate("MainWindow", "Theta*", Q_NULLPTR));
-        refresh_button->setText(QApplication::translate("MainWindow", "Refresh", Q_NULLPTR));
-        start_button->setText(QApplication::translate("MainWindow", "Start", Q_NULLPTR));
     } // retranslateUi
 
 };

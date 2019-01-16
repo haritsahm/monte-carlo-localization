@@ -9,19 +9,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(Qt5_DIR "/opt/qt59/lib/cmake/Qt5")
+set(OpenCV_DIR "/usr/local/share/OpenCV")
 
 find_package(Qt5 REQUIRED COMPONENTS Gui Widgets)
+find_package(OpenCV REQUIRED)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
 add_executable(${PROJECT_NAME} mcl_viewer.cpp mainwindow.cpp gridbased.cpp
-    mainwindow.ui
+    mainwindow.ui mcl_item.cpp mcl_properties.h mcl.cpp
     )
 
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES}
     Qt5::Gui
     Qt5::Core
     Qt5::Widgets
