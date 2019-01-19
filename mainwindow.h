@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#ifndef Q_MOC_RUN
 #include <QMainWindow>
 #include <QObject>
 #include <QDialog>
@@ -10,14 +9,15 @@
 #include <QtCore>
 #include <QGraphicsItem>
 #include <QKeyEvent>
+#include <QFileDialog>
 #include <iostream>
 #include <QTimer>
 #include "ui_mainwindow.h"
 #include "mcl_properties.h"
 #include "mcl_item.h"
 #include "mcl.h"
+#include "control.h"
 #include <opencv2/imgproc.hpp>
-#endif
 
 namespace Ui {
 class MainWindow;
@@ -43,11 +43,14 @@ public slots:
     void updateRobotPose();
     void setLinePoints(std::vector<QPointF> linePoints);
     void setParticles(Particles particles, State mean_estimate);
-
+    void on_menu_open_control_triggered();
+    void on_menu_loadconfig_triggered();
+    void setPose(double x, double y, double w);
 
 signals:
     void updateOdometry(double x, double y, double deg);
     void updatePose(double x, double y, double deg);
+    void loadConfig(std::string path);
 
 private:
     Ui::MainWindow *ui;
@@ -94,6 +97,7 @@ private:
     MCL *mcl;
     QTimer *activeTimer;
     MCLItem *mcl_item;
+    Control *control;
 
     QPointF pos, prev_pos;
     double angle, prev_angle;

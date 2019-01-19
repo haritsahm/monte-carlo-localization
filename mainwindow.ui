@@ -58,7 +58,31 @@
      <height>19</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuMenu">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+    <widget class="QMenu" name="menuController">
+     <property name="title">
+      <string>Controller</string>
+     </property>
+     <addaction name="menu_open_control"/>
+    </widget>
+    <addaction name="menuController"/>
+    <addaction name="menu_loadconfig"/>
+   </widget>
+   <addaction name="menuMenu"/>
   </widget>
+  <action name="menu_loadconfig">
+   <property name="text">
+    <string>Load Config</string>
+   </property>
+  </action>
+  <action name="menu_open_control">
+   <property name="text">
+    <string>Open Controller</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

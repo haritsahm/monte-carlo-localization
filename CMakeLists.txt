@@ -13,17 +13,23 @@ set(OpenCV_DIR "/usr/local/share/OpenCV")
 
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(OpenCV REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
+include_directories(
+    ${YAML_CPP_INCLUDE_DIR}
+    )
+
 add_executable(${PROJECT_NAME} mcl_viewer.cpp mainwindow.cpp
-    mainwindow.ui mcl_item.cpp mcl_properties.h mcl.cpp
+    mainwindow.ui control.ui mcl_item.cpp mcl_properties.h mcl.cpp
+    control.cpp
     )
 
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES}
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES} ${YAML_CPP_LIBRARIES}
     Qt5::Gui
     Qt5::Core
     Qt5::Widgets

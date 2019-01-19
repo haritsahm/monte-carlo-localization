@@ -10,6 +10,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     white_points = new WhitePoints;
     mcl = new MCL;
     mcl_item = new MCLItem;
+    control = new Control;
 
     QShortcut *shortcutW = new QShortcut(Qt::Key_W, this);
     QShortcut *shortcutA = new QShortcut(Qt::Key_A, this);
@@ -38,6 +39,13 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     connect(activeTimer, SIGNAL(timeout()), this, SLOT(updateRobotPose()));
     connect(this, SIGNAL(updateOdometry(double,double,double)), mcl, SLOT(updateOdometry(double,double,double)));
     connect(this, SIGNAL(updatePose(double,double,double)), mcl, SLOT(updatePose(double,double,double)));
+    connect(control, SIGNAL(setPose(double,double,double)), this, SLOT(setPose(double, double,double)));
+    connect(control, SIGNAL(setMotionNoise(double,double,double)), mcl, SLOT(setMotionNoise(double, double, double)));
+    connect(control, SIGNAL(setVisionNoise(double,double)), mcl, SLOT(setVisionNoise(double,double)));
+    connect(mcl, SIGNAL(publishMotionNoise(double,double,double)), control, SLOT(setMNoise(double,double,double)));
+
+    qRegisterMetaType<std::string>("std::string");
+    connect(this, SIGNAL(loadConfig(std::string)), mcl, SLOT(loadConfig(std::string)));
 
     qRegisterMetaType<std::vector<QPointF>>("std::vector<QPointF>");
     connect(mcl, SIGNAL(publishPoints(std::vector<QPointF>)), this, SLOT(setLinePoints(std::vector<QPointF>)));
@@ -143,6 +151,35 @@ void MainWindow::onEpressed()
     //        pos_theta -= 360;
     //    else if(pos_theta < 0)
     //        pos_theta += 360;
+}
+
+void MainWindow::on_menu_open_control_triggered()
+{
+    control->show();
+}
+
+void MainWindow::on_menu_loadconfig_triggered()
+{
+    QString filename =  QFileDialog::getOpenFileName(
+          this,
+          "Open Config",
+          QDir::currentPath(),
+          "All files (*.*) ;; Config files (*.yaml)");
+
+    if( !filename.isNull() )
+    {
+      qDebug() << "selected file path : " << filename.toUtf8();
+    }
+
+    emit loadConfig(filename.toStdString());
+}
+
+void MainWindow::setPose(double x, double y, double w)
+{
+    pos.setX(x);
+    pos.setY(y);
+    angle = w;
+
 }
 
 void MainWindow::setPosition(double pos_x, double pos_y)

@@ -14,6 +14,7 @@
 #include <random>
 #include <cmath>
 #include <typeinfo>
+#include <yaml-cpp/yaml.h>
 
 class MCL : public QObject
 {
@@ -48,11 +49,15 @@ public:
 public slots:
     void updateOdometry(double x, double y, double deg);
     void updatePose(double x, double y, double deg);
+    void setMotionNoise(double x, double y, double w);
+    void setVisionNoise(double x, double y);
+    void loadConfig(std::string path);
 
 signals:
     void publishPoints(std::vector<QPointF> linePoints);
     void publishMeanEst(State mean_estimate);
     void publishParticles(Particles particles, State mean_estimate);
+    void publishMotionNoise(double x, double y, double w);
 
 private:
     void updatePercetion(std::vector<SensorData> linePoints);
@@ -60,6 +65,7 @@ private:
     void resampling();
     void lowVarResampling();
     void LineScanning();
+    void saveConfig();
 
     cv::Mat field;
     cv::Point3d robot_pos;
@@ -79,6 +85,9 @@ private:
 
     //gaussian noise variable
     double x_dev, y_dev, w_dev;
+    double mgauss_x, mgauss_y, mgauss_w;
+    double vgauss_x, vgauss_y;
+    std::string config_path;
 
     FieldMatrix field_weight;
 
