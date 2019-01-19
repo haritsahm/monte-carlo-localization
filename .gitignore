@@ -10,3 +10,5 @@ CTestTestfile.cmake
 *.mp4
 *.cbp
 paper.pdf
+./mcl_viewer
+
