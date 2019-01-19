@@ -5,7 +5,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     field = new Field;
-    grid = new GridMap;
+    //    grid = new GridMap;
     robot_item = new RobotItem;
     white_points = new WhitePoints;
     mcl = new MCL;
@@ -48,7 +48,6 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 
     activeTimer->start();
 
-
     ui->setupUi(this);
     scene = new QGraphicsScene(this);
     scene->setSceneRect((-FIELD_WIDTH/2)-BORDER, (-FIELD_HEIGHT/2)-BORDER, FIELD_WIDTH + (2*BORDER), FIELD_HEIGHT + (2*BORDER));
@@ -59,10 +58,11 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     ui->graphicsView->scene()->addItem(white_points);
     ui->graphicsView->scene()->addItem(mcl_item);
 
-    this->setWindowTitle("Alfarobi AMCL Viewer");
+    this->setWindowTitle("Monte Carlo Localization");
 
-    pos_x = pos_y = pos_theta = 0;
-    prev_x = prev_y = prev_theta = 0;
+    pos_x = pos_y = pos_theta = angle = 0;
+    pos = prev_pos = QPointF(0,0);
+
 
     robot_item->update();
     mcl->init();
@@ -109,66 +109,82 @@ QRectF MainWindow::Field::boundingRect() const
 
 void MainWindow::onWpressed()
 {
-    pos_y += 5;
+    pos_y = 5;
 }
 
 void MainWindow::onApressed()
 {
-    pos_x -= 5;
+    pos_x = -5;
 }
 
 void MainWindow::onSpressed()
 {
-    pos_y -= 5;
+    pos_y = -5;
 }
 
 void MainWindow::onDpressed()
 {
-    pos_x += 5;
+    pos_x = 5;
 }
 
 void MainWindow::onQpressed()
 {
-    pos_theta -= 2;
-    if(pos_theta > 359)
-        pos_theta -= 360;
-    else if(pos_theta < 0)
-        pos_theta += 360;
+    pos_theta = -2;
+    //    if(pos_theta > 359)
+    //        pos_theta -= 360;
+    //    else if(pos_theta < 0)
+    //        pos_theta += 360;
 }
 
 void MainWindow::onEpressed()
 {
-    pos_theta += 2;
-    if(pos_theta > 359)
-        pos_theta -= 360;
-    else if(pos_theta < 0)
-        pos_theta += 360;
+    pos_theta = 2;
+    //    if(pos_theta > 359)
+    //        pos_theta -= 360;
+    //    else if(pos_theta < 0)
+    //        pos_theta += 360;
 }
 
-void MainWindow::setPosition()
+void MainWindow::setPosition(double pos_x, double pos_y)
 {
-    robot_item->setPose(pos_x, pos_y, pos_theta);
-    double dx = pos_x -prev_x; double dy = pos_y-prev_y; double dtheta = pos_theta-prev_theta;
+    robot_item->setPose(pos_x, pos_y, angle);
+    emit updatePose(pos_x, pos_y, angle);
+    double dx = pos_x-prev_pos.x(); double dy = pos_y-prev_pos.y(); double dtheta = angle-prev_angle;
     emit updateOdometry(dx, dy, dtheta);
 
-
-    prev_x = pos_x; prev_y = pos_y; prev_theta = pos_theta;
-
-    white_points->setPose(pos_x, pos_y, pos_theta);
+    white_points->setPose(pos_x, pos_y, angle);
     robot_item->update();
+
+    prev_pos.setX(pos_x);
+    prev_pos.setY(pos_y);
+    prev_angle = angle;
 }
 
 void MainWindow::updateRobotPose()
 {
-    setPosition();
-    emit updatePose(pos_x, pos_y, pos_theta);
+    double c = cos(angle*M_PI/180);
+    double s = sin(angle*M_PI/180);
 
-    double posx = CENTERX + pos_x; if(posx < 0) posx = 0; if (posx > MATWIDTH) posx = MATWIDTH;
-    double posy =  CENTERY - pos_y; if(posy < 0) posy = 0; if(posy > MATHEIGHT) posy = MATHEIGHT;
+    double d_x = c*(pos.x()) +s*(pos.y());
+    double d_y = -s*(pos.x()) +c*(pos.y());
+    double dx = c*(d_x + pos_x) -s*(d_y + pos_y);
+    double dy = s*(d_x + pos_x) +c*(d_y + pos_y);
+
+    pos.setX(dx);
+    pos.setY(dy);
+    angle += pos_theta;
+
+    if(angle > 359)
+        angle -= 360;
+    else if(angle < 0)
+        angle += 360;
+
+    setPosition(pos.x(), pos.y());
+
+    double posx = CENTERX + pos.x(); if(posx < 0) posx = 0; else if (posx > MATWIDTH) posx = MATWIDTH;
+    double posy =  CENTERY - pos.y(); if(posy < 0) posy = 0; else if(posy > MATHEIGHT) posy = MATHEIGHT;
 
     std::vector<std::pair<cv::Point, cv::Point> > scanPoints;
-    double c = cos(pos_theta*M_PI/180);
-    double s = sin(pos_theta*M_PI/180);
     double l = (FIELD_WIDTH/2+20);
     double rad = 25;
 
@@ -180,7 +196,7 @@ void MainWindow::updateRobotPose()
         double p1_y = s*x1 + c*y1;
         double point1x = posx + p1_x; double point1y = posy - p1_y;
         if(point1x < 0) point1x = 0; else if (point1x > MATWIDTH) point1x = MATWIDTH;
-        if(point1y < 0) point1y = 0; if(point1y > MATHEIGHT) point1y = MATHEIGHT;
+        if(point1y < 0) point1y = 0; else if (point1y > MATHEIGHT) point1y = MATHEIGHT;
 
         double x2 = l;
         double y2 = tan(deg*M_PI/180)*l;
@@ -188,7 +204,7 @@ void MainWindow::updateRobotPose()
         double p2_y = s*x2 + c*y2;
         double point2x = posx + p2_x; double point2y = posy - p2_y;
         if(point2x < 0) point2x = 0; else if (point2x > MATWIDTH) point2x = MATWIDTH;
-        if(point2y < 0) point2y = 0; if(point2y > MATHEIGHT) point2y = MATHEIGHT;
+        if(point2y < 0) point2y = 0; else if (point2y > MATHEIGHT) point2y = MATHEIGHT;
 
         scanPoints.push_back(std::make_pair(cv::Point(point1x, point1y), cv::Point(point2x, point2y)));
     }
@@ -201,7 +217,7 @@ void MainWindow::updateRobotPose()
         double p1_y = s*x1 + c*y1;
         double point1x = posx + p1_x; double point1y = posy - p1_y;
         if(point1x < 0) point1x = 0; else if (point1x > MATWIDTH) point1x = MATWIDTH;
-        if(point1y < 0) point1y = 0; if(point1y > MATHEIGHT) point1y = MATHEIGHT;
+        if(point1y < 0) point1y = 0; else if (point1y > MATHEIGHT) point1y = MATHEIGHT;
 
         double x2 = l;
         double y2 = -tan(deg*M_PI/180)*l;
@@ -209,12 +225,13 @@ void MainWindow::updateRobotPose()
         double p2_y = s*x2 + c*y2;
         double point2x = posx + p2_x; double point2y = posy - p2_y;
         if(point2x < 0) point2x = 0; else if (point2x > MATWIDTH) point2x = MATWIDTH;
-        if(point2y < 0) point2y = 0; if(point2y > MATHEIGHT) point2y = MATHEIGHT;
+        if(point2y < 0) point2y = 0; else if (point2y > MATHEIGHT) point2y = MATHEIGHT;
 
         scanPoints.push_back(std::make_pair(cv::Point(point1x, point1y), cv::Point(point2x, point2y)));
     }
 
     mcl->setScanPoints(scanPoints);
+    pos_x = pos_y = pos_theta = 0;
 }
 
 void MainWindow::setLinePoints(std::vector<QPointF> linePoints)

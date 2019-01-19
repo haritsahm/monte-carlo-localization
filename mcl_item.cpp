@@ -25,11 +25,9 @@ void RobotItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         QRectF particle_(-5, -5, 10, 10);
         double point_x = c*d.x()-s*d.y();
         double point_y = s*d.x()+c*d.y();
+        if(abs(point_x) > (FIELD_WIDTH/2) + GOAL_WIDTH || abs(point_y > (FIELD_HEIGHT/2))) continue;
         particle_.translate(belief_pos + QPointF(point_x, point_y));
-//        painter->drawEllipse(QPointF(point_x, point_y), 5, 5);
-//        painter->setPen(Qt::blue);
         painter->drawEllipse(particle_);
-//        painter->drawEllipse(d, 5,5);
     }
 
     //robot
@@ -122,22 +120,22 @@ void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     painter->scale(1,-1);
 
     painter->setBrush(Qt::blue);
-    auto mat = painter->transform();
-        for(auto& p: particles)
-        {
-            QRectF particle_(-10, -10, 20, 20);
-            double x = std::get<0>(p);
-            double y = std::get<1>(p);
-            double w = std::get<2>(p);
-            particle_.translate(x, y);
-            double c = cos(w * M_PI/180);
-            double s = sin(w * M_PI/180);
-            painter->setPen(Qt::blue);
-            double rot_lx = c*40-s*0;
-            double rot_ly = s*40+c*0;
-            painter->drawLine(QPointF(x,y), QPointF(x,y) + QPointF(rot_lx, rot_ly));
-            painter->drawEllipse(particle_);
-        }
+    for(auto& p: particles)
+    {
+        QRectF particle_(-10, -10, 20, 20);
+        double x = std::get<0>(p);
+        double y = std::get<1>(p);
+        double w = std::get<2>(p);
+        if(abs(x) > (FIELD_WIDTH/2) + GOAL_WIDTH || abs(y) > (FIELD_HEIGHT/2)) continue;
+        particle_.translate(x, y);
+        double c = cos(w * M_PI/180);
+        double s = sin(w * M_PI/180);
+        painter->setPen(Qt::blue);
+        double rot_lx = c*40-s*0;
+        double rot_ly = s*40+c*0;
+        painter->drawLine(QPointF(x,y), QPointF(x,y) + QPointF(rot_lx, rot_ly));
+        painter->drawEllipse(particle_);
+    }
 
     painter->setBrush(Qt::black);
     QRectF bel(-10, -10, 20, 20);
@@ -156,12 +154,23 @@ void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     painter->setPen(Qt::red);
     for(auto d: linePoints)
     {
-        double c = cos(w_ * M_PI/180);
-        double s = sin(w_ * M_PI/180);
         double world_x = c*d.x()-s*d.y()+x_;
         double world_y = s*d.x()+c*d.y()+y_;
+        if(abs(world_x) > (FIELD_WIDTH/2) + GOAL_WIDTH || abs(world_y) > (FIELD_HEIGHT/2)) continue;
         painter->drawEllipse(QPointF(world_x, world_y), 5, 5);
     }
+
+    double len_y = tan(fov_horizontal)*(FIELD_WIDTH/2+20);
+    double len_x = (FIELD_WIDTH/2+20);
+    double rot_lx1 = c*len_x-s*(len_y);
+    double rot_ly1 = s*len_x+c*(len_y);
+    double rot_lx2 = c*len_x-s*(-len_y);
+    double rot_ly2 = s*len_x+c*(-len_y);
+    QPolygonF fov; fov << QPoint(x_,y_)
+                       << QPoint(x_,y_) + QPoint(rot_lx1,rot_ly1)
+                       << QPoint(x_,y_) + QPoint(rot_lx2, rot_ly2);
+    painter->setOpacity(0.5);
+    painter->drawPolygon(fov);
 
 }
 

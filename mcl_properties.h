@@ -10,7 +10,7 @@
 #define DEGREE2RADIAN M_PI/180
 
 #define GRID_SIZE 20
-#define RAD_SCAN 10
+#define RAD_SCAN 20
 #define N_Particle 100
 
 #define FIELD_WIDTH 900

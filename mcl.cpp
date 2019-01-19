@@ -20,17 +20,14 @@ void MCL::init()
 
     robot_pos = cv::Point3d(0,0,0);
 
-    std::string path = "scaled.bin";
+    std::string path = "norm_dist.bin";
     field_weight.loadData(path);
 
     std::random_device x_rd, y_rd, w_rd;
-    std::uniform_real_distribution<double> x_rgen(-FIELD_WIDTH/2,FIELD_WIDTH/2), y_rgen(-FIELD_HEIGHT/2,FIELD_HEIGHT/2), w_rgen(0,360);
+    std::uniform_real_distribution<double> x_rgen(-FIELD_WIDTH/2,FIELD_WIDTH/2), y_rgen(-FIELD_HEIGHT/2,FIELD_HEIGHT/2), w_rgen(0,359);
 
     for(int i = 0; i < N_Particle; i++)
         particles.push_back(Particle(x_rgen(x_rd), y_rgen(y_rd), w_rgen(w_rd), 1/N_Particle));
-
-    //    emit publishParticles(particles);
-
 
 }
 
@@ -81,11 +78,16 @@ void MCL::updateMotion()
 void MCL::setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints)
 {
     scan_Points = scanPoints;
-    updatePercetion();
+    LineScanning();
 
 }
 
-void MCL::updatePercetion()
+double MCL::errorfcn(double dist)
+{
+    return 1-(10000/(10000+(dist*dist)));
+}
+
+void MCL::LineScanning()
 {
 #ifdef DEBUG_MAT
     cv::Mat alpha = cv::Mat::zeros(field.size(), CV_8UC1);
@@ -135,46 +137,59 @@ void MCL::updatePercetion()
     cv::waitKey(1);
 #endif
 
-        int num_points = linePoints_.size();
-        double sum_weight = 0;
+#ifndef DEBUG_MAT
+    updatePercetion(linePoints_);
+#endif
 
-        for(auto &p : particles)
-        {
-            double err_sum = 0;
-            double prob = 1;
-            double p_weight = 1;
-            for(auto d : linePoints_)
+
+}
+
+void MCL::updatePercetion(std::vector<SensorData> linePoints)
+{
+    int num_points = linePoints.size();
+    double sum_weight = 0;
+
+    for(auto &p : particles)
+    {
+        double err_sum = 0;
+        double p_weight = 1;
+        if(num_points !=0 )
+            for(auto &d : linePoints)
             {
+                //                std::cout << "Point : " << x(d) << ", " << y(d);
                 double angle_rad = w(p) * DEGREE2RADIAN;
                 double c = cos(angle_rad);
                 double s = sin(angle_rad);
                 double world_x = c*x(d)-s*y(d)+x(p);
                 double world_y = s*x(d)+c*y(d)+y(p);
+                if(w(p) == 0)
+                std::cout << " World or: " << world_x-x(p) << ", " << world_y-y(p) << std::endl;
                 double distance = field_weight.distance(world_x,world_y);
-                //            prob *= exp((-distance)/(2*0.1*0.1));
-                double pt_distance = sqrt(x(d)*x(d)+y(d)*y(d));
-                if(pt_distance<0.0)
-                    pt_distance = 1.0;
-                if(distance<0.01)
-                    distance = 0.01;
-                err_sum += distance*distance*pt_distance;
+                err_sum += distance;
             }
-            if(err_sum > 0)
-                p_weight = 1/(err_sum);
 
-            if(num_points > 0)
-                p_weight /= num_points;
+        if(err_sum > 0)
+            p_weight = 1/err_sum;
 
-            weight(p) = p_weight;
-            sum_weight += p_weight;
+        if(num_points > 0)
+            p_weight /= num_points;
+
+        weight(p) = p_weight;
+        sum_weight += p_weight;
+    }
+
+    //normalization, sum of every weight = 1
+    double sum = 0;
+    if(sum_weight > 0)
+        for(auto& p : particles)
+        {
+            weight(p) /= sum_weight;
+            sum+= weight(p);
         }
 
-        //normalization, sum of every weight = 1
-        if(sum_weight > 0)
-            for(auto& p : particles)
-                weight(p) /= sum_weight;
+    lowVarResampling();
 
-        lowVarResampling();
+    std::cout << "sum : " << sum << std::endl;
 
 
 }
@@ -182,10 +197,10 @@ void MCL::updatePercetion()
 void MCL::lowVarResampling()
 {
     Particles new_list;
-    std::random_device rd;  //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> rg(0.0,1.0/N_Particle);
-    double r = rg(gen);
+    std::default_random_engine rd;  //Will be used to obtain a seed for the random number engine
+    //    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> rg(0.0,1.0/N_Particle);
+    double r = rg(rd);
     double c = weight(particles[0]);
     best_estimate = particles[0];
     int id = 0;
@@ -197,7 +212,7 @@ void MCL::lowVarResampling()
 
     for(int j = 0; j < N_Particle; j++)
     {
-        double U = r+((double)j/N_Particle);
+        double U = r+(double(j)/N_Particle);
         while(U > c)
         {
             id +=1;
@@ -206,8 +221,6 @@ void MCL::lowVarResampling()
         if(weight(particles[id]) > weight(best_estimate))
             best_estimate = particles[id];
 
-        //        mean_x += 1/N_Particle*x(particles[id]);
-        //        mean_y += 1/N_Particle*y(particles[id]);
         new_list.push_back(particles[id]);
     }
 
@@ -218,6 +231,7 @@ void MCL::lowVarResampling()
         double deg = w(p) * M_PI/180;
         sin_ += sin(deg);
         cos_ += cos(deg);
+//        weight(p) = 1/N_Particle;
     }
 
     mean_x /= N_Particle;
@@ -230,7 +244,9 @@ void MCL::lowVarResampling()
 
     particles = new_list;
 
-    //    State mean_ = mean();
+//    if(weight(best_estimate) > 0.7)
+        std::cout << weight(best_estimate) << std::endl;
+
 
     publishParticles(particles, mean());
 
@@ -259,28 +275,35 @@ void MCL::resampling()
     y(mean_estimate) = (1/N_Particle)*bel_y;
     w(mean_estimate) = (1/N_Particle)*bel_w;
 
-
     emit publishParticles(particles, mean());
 }
 
 MCL::FieldMatrix::FieldMatrix()
 {
     distance_matrix = new double[MATHEIGHT*MATWIDTH];
+    //    distance_matrix = (double*)malloc(MATHEIGHT*MATWIDTH * sizeof(double));
+
 }
 
 void MCL::FieldMatrix::loadData(std::string path)
 {
-    std::ifstream file(path,std::ios::binary|std::ios::in);
+    std::ifstream file;
+    file.open(path, std::ios::in | std::ios::binary);
     file.read((char*)distance_matrix,sizeof(double)*MATWIDTH*MATHEIGHT);
     file.close();
+
 }
 
 double MCL::FieldMatrix::distance(double x, double y)
 {
     int x_ = (int)x+CENTERX;
     int y_ = CENTERY-(int)y;
-    if(((x_ > 0) && (x_ <= MATWIDTH)) && ((y_ > 0) && (y_ <= MATHEIGHT)))
-        return distance_matrix[y_*MATWIDTH+x_];
+    int pos = y_*MATWIDTH+x_;
+    if(((x_ >= 0) && (x_ <= MATWIDTH)) && ((y_ >= 0) && (y_ <= MATHEIGHT))  && pos <= MATHEIGHT*MATWIDTH)
+    {
+        double dist = distance_matrix[pos];
+        return dist;
+    }
     else
     {
         return 200;

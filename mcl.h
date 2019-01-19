@@ -24,6 +24,7 @@ public:
     MCL();
     void init();
     void setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints);
+    double errorfcn(double dist);
 
     struct FieldMatrix;
 
@@ -54,10 +55,11 @@ signals:
     void publishParticles(Particles particles, State mean_estimate);
 
 private:
-    void updatePercetion();
+    void updatePercetion(std::vector<SensorData> linePoints);
     void updateMotion();
     void resampling();
     void lowVarResampling();
+    void LineScanning();
 
     cv::Mat field;
     cv::Point3d robot_pos;

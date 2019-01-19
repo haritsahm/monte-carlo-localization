@@ -1,21 +1,23 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#ifndef Q_MOC_RUN
 #include <QMainWindow>
 #include <QObject>
 #include <QDialog>
+#include <QTransform>
 #include <QShortcut>
+#include <QtCore>
 #include <QGraphicsItem>
 #include <QKeyEvent>
 #include <iostream>
 #include <QTimer>
 #include "ui_mainwindow.h"
-#include "gridbased.h"
 #include "mcl_properties.h"
 #include "mcl_item.h"
 #include "mcl.h"
 #include <opencv2/imgproc.hpp>
-
+#endif
 
 namespace Ui {
 class MainWindow;
@@ -29,7 +31,7 @@ public:
     explicit MainWindow(int argc, char** argv, QWidget *parent = 0);
     ~MainWindow();
 
-    void setPosition();
+    void setPosition(double pos_x, double pos_y);
 
 public slots:
     void onWpressed();
@@ -86,7 +88,6 @@ private:
 
 private:
     Field *field;
-    GridMap *grid;
     QGraphicsScene *scene;
     RobotItem *robot_item;
     WhitePoints *white_points;
@@ -94,10 +95,9 @@ private:
     QTimer *activeTimer;
     MCLItem *mcl_item;
 
-    Pose2D robot_state;
-
+    QPointF pos, prev_pos;
+    double angle, prev_angle;
     double pos_x, pos_y, pos_theta;
-    double prev_x, prev_y, prev_theta;
 
 };
 
