@@ -1,4 +1,5 @@
 CMakeCache.txt
+*.txt.*
 CMakeFiles
 CMakeScripts
 Testing
