@@ -20,12 +20,13 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     QShortcut *shortcutE = new QShortcut(Qt::Key_E, this);
 
 
-    QObject::connect(shortcutW, SIGNAL(activated()), this, SLOT(onWpressed()));
-    QObject::connect(shortcutA, SIGNAL(activated()), this, SLOT(onApressed()));
-    QObject::connect(shortcutS, SIGNAL(activated()), this, SLOT(onSpressed()));
-    QObject::connect(shortcutD, SIGNAL(activated()), this, SLOT(onDpressed()));
-    QObject::connect(shortcutQ, SIGNAL(activated()), this, SLOT(onQpressed()));
-    QObject::connect(shortcutE, SIGNAL(activated()), this, SLOT(onEpressed()));
+    // Locally Move Robot
+    QObject::connect(shortcutW, SIGNAL(activated()), this, SLOT(onWpressed())); // Y +
+    QObject::connect(shortcutA, SIGNAL(activated()), this, SLOT(onApressed())); // X -
+    QObject::connect(shortcutS, SIGNAL(activated()), this, SLOT(onSpressed())); // Y -
+    QObject::connect(shortcutD, SIGNAL(activated()), this, SLOT(onDpressed())); // X +
+    QObject::connect(shortcutQ, SIGNAL(activated()), this, SLOT(onQpressed())); // Theta -
+    QObject::connect(shortcutE, SIGNAL(activated()), this, SLOT(onEpressed())); // Theta +
 
 
     shortcutW->setAutoRepeat(true);
@@ -42,7 +43,11 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     connect(control, SIGNAL(setPose(double,double,double)), this, SLOT(setPose(double, double,double)));
     connect(control, SIGNAL(setMotionNoise(double,double,double)), mcl, SLOT(setMotionNoise(double, double, double)));
     connect(control, SIGNAL(setVisionNoise(double,double)), mcl, SLOT(setVisionNoise(double,double)));
-    connect(mcl, SIGNAL(publishMotionNoise(double,double,double)), control, SLOT(setMNoise(double,double,double)));
+
+    qRegisterMetaType<QVector<double>>("QVector<double>");
+    connect(control, SIGNAL(setMCLParam(QVector<double>)), mcl, SLOT(setMCLParam(QVector<double>)));
+    qRegisterMetaType<QVector<double>>("QVector<double>");
+    connect(mcl, SIGNAL( publishParam(QVector<double>)), control, SLOT(setParam(QVector<double>)));
 
     qRegisterMetaType<std::string>("std::string");
     connect(this, SIGNAL(loadConfig(std::string)), mcl, SLOT(loadConfig(std::string)));
@@ -186,14 +191,21 @@ void MainWindow::setPosition(double pos_x, double pos_y)
 {
     robot_item->setPose(pos_x, pos_y, angle);
     emit updatePose(pos_x, pos_y, angle);
-    double dx = pos_x-prev_pos.x(); double dy = pos_y-prev_pos.y(); double dtheta = angle-prev_angle;
+
+    double c = cos(angle*DEGREE2RADIAN);
+    double s = sin(angle*DEGREE2RADIAN);
+
+    double t_x = c*pos_x+s*pos_y;
+    double t_y = -s*pos_x+c*pos_y;
+
+    double dx = t_x-prev_pos.x(); double dy = t_y-prev_pos.y(); double dtheta = angle-prev_angle;
     emit updateOdometry(dx, dy, dtheta);
 
     white_points->setPose(pos_x, pos_y, angle);
     robot_item->update();
 
-    prev_pos.setX(pos_x);
-    prev_pos.setY(pos_y);
+    prev_pos.setX(t_x);
+    prev_pos.setY(t_y);
     prev_angle = angle;
 }
 
@@ -201,6 +213,8 @@ void MainWindow::updateRobotPose()
 {
     double c = cos(angle*M_PI/180);
     double s = sin(angle*M_PI/180);
+
+    //Local robot navigation
 
     double d_x = c*(pos.x()) +s*(pos.y());
     double d_y = -s*(pos.x()) +c*(pos.y());
@@ -217,6 +231,8 @@ void MainWindow::updateRobotPose()
         angle += 360;
 
     setPosition(pos.x(), pos.y());
+
+    //Scan line point from robot fov
 
     double posx = CENTERX + pos.x(); if(posx < 0) posx = 0; else if (posx > MATWIDTH) posx = MATWIDTH;
     double posy =  CENTERY - pos.y(); if(posy < 0) posy = 0; else if(posy > MATHEIGHT) posy = MATHEIGHT;

@@ -20,7 +20,7 @@ void MCL::init()
 
     robot_pos = cv::Point3d(0,0,0);
 
-    std::string path = "norm_dist-1.bin";
+    std::string path = "norm_dist.bin";
     field_weight.loadData(path);
 
     std::random_device x_rd, y_rd, w_rd;
@@ -30,33 +30,38 @@ void MCL::init()
         particles.push_back(Particle(x_rgen(x_rd), y_rgen(y_rd), w_rgen(w_rd), 1/N_Particle));
 
     mgauss_w = 2; mgauss_x = 1; mgauss_y = 1;
+    mcl_var = 1; mcl_wslow = mcl_wfast = mcl_aslow = mcl_afast = 0;
 
     std::string config_path = "config.yaml";
     loadConfig(config_path);
-
-    std::cout << field_weight.distance(450, 0) << std::endl;
-
 }
 
 void MCL::loadConfig(std::string path)
 {
     config_path = path;
+    QVector<double> param;
+    param.resize(8);
     YAML::Node doc;
     try
     {
-      // load yaml
-      doc = YAML::LoadFile(config_path.c_str());
+        // load yaml
+        doc = YAML::LoadFile(config_path.c_str());
     } catch (const std::exception& e)
     {
-      std::cout <<"Fail to load yaml file." << std::endl;
+        std::cout <<"Fail to load yaml file." << std::endl;
     }
 
     //walking_param_.zmp_useGyro = doc["GyroStabilizer"].as<bool>();
-    mgauss_x = doc["mgauss_x"].as<double>();
-    mgauss_y = doc["mgauss_y"].as<double>();
-    mgauss_w = doc["mgauss_w"].as<double>();
+    param[0] = mgauss_x = doc["mgauss_x"].as<double>();
+    param[1] = mgauss_y = doc["mgauss_y"].as<double>();
+    param[2] = mgauss_w = doc["mgauss_w"].as<double>();
+    param[3] = mcl_var = doc["mcl_var"].as<double>();
+    param[4] = mcl_wfast = doc["mcl_wfast"].as<double>();
+    param[5] = mcl_wslow = doc["mcl_wslow"].as<double>();
+    param[6] = mcl_afast = doc["mcl_afast"].as<double>();
+    param[7] = mcl_aslow = doc["mcl_aslow"].as<double>();
 
-    emit publishMotionNoise(mgauss_x, mgauss_y, mgauss_w);
+    emit publishParam(param);
 
 }
 
@@ -69,6 +74,11 @@ void MCL::saveConfig()
     out << YAML::Key << "mgauss_x" << YAML::Value << mgauss_x;
     out << YAML::Key << "mgauss_y" << YAML::Value << mgauss_y ;
     out << YAML::Key << "mgauss_w" << YAML::Value << mgauss_w ;
+    out << YAML::Key << "mcl_var" << YAML::Value << mcl_var;
+    out << YAML::Key << "mcl_wfast" << YAML::Value << mcl_wfast;
+    out << YAML::Key << "mcl_wslow" << YAML::Value << mcl_wslow;
+    out << YAML::Key << "mcl_afast" << YAML::Value << mcl_afast;
+    out << YAML::Key << "mcl_aslow" << YAML::Value << mcl_aslow;
 
     out << YAML::EndMap;
 
@@ -92,6 +102,39 @@ void MCL::updatePose(double x, double y, double deg)
     robot_pos.y = y;
     robot_pos.z = deg;
 
+}
+
+void MCL::setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints)
+{
+    scan_Points = scanPoints;
+    LineScanning();
+
+}
+
+void MCL::setMotionNoise(double x, double y, double w)
+{
+    mgauss_x = x; mgauss_y = y; mgauss_w = w;
+    saveConfig();
+}
+
+void MCL::setVisionNoise(double x, double y)
+{
+
+}
+
+void MCL::setMCLParam(QVector<double> param)
+{
+    this->mcl_wfast = param[0];
+    this->mcl_wslow = param[1];
+    this->mcl_var = param[2];
+    this->mcl_afast = param[3];
+    this->mcl_aslow = param[4];
+    saveConfig();
+}
+
+double MCL::errorfcn(double dist)
+{
+    return 1-(10000/(10000+(dist*dist)));
 }
 
 void MCL::updateMotion()
@@ -121,29 +164,6 @@ void MCL::updateMotion()
 
 }
 
-void MCL::setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints)
-{
-    scan_Points = scanPoints;
-    LineScanning();
-
-}
-
-void MCL::setMotionNoise(double x, double y, double w)
-{
-    mgauss_x = x; mgauss_y = y; mgauss_w = w;
-    saveConfig();
-}
-
-void MCL::setVisionNoise(double x, double y)
-{
-
-}
-
-double MCL::errorfcn(double dist)
-{
-    return 1-(10000/(10000+(dist*dist)));
-}
-
 void MCL::LineScanning()
 {
 #ifdef DEBUG_MAT
@@ -171,6 +191,7 @@ void MCL::LineScanning()
         for(int i = 0; i < it.count; i++, ++it)
             if(field.at<uchar>(it.pos()) == 255)
             {
+                //Return the original Point(x,y) respect to robot origin
                 double dx = it.pos().x - (CENTERX + robot_pos.x);
                 double dy = (CENTERY - robot_pos.y) - it.pos().y;
                 double point_x = c*dx + s*dy;
@@ -179,6 +200,8 @@ void MCL::LineScanning()
                 double world_x = c*point_x-s*point_y+(CENTERX + robot_pos.x);
                 double world_y = (CENTERY - robot_pos.y) - (s*point_x+c*point_y);
                 cv::circle(alpha, cv::Point(world_x, world_y), 5, cv::Scalar(255));
+                cv::circle(alpha, cv::Point((CENTERX + robot_pos.x), (CENTERY - robot_pos.y)), 2, cv::Scalar(255));
+
                 //cv::circle(alpha, cv::Point((CENTERX + robot_pos.x) + dx, (CENTERY - robot_pos.y) - dy), 5, cv::Scalar(255));
 
 #endif
@@ -205,10 +228,12 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
 {
     int num_points = linePoints.size();
     double sum_weight = 0;
+    double w_avg = 0;
 
     for(auto &p : particles)
     {
         double err_sum = 0;
+        double prob= 1;
         double p_weight = 1;
         if(num_points !=0 )
             for(auto &d : linePoints)
@@ -219,17 +244,18 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
                 double world_x = c*x(d)-s*y(d)+x(p);
                 double world_y = s*x(d)+c*y(d)+y(p);
                 double distance = field_weight.distance(world_x,world_y);
-                err_sum += distance;
+                prob *= exp((-distance*distance)/(2*mcl_var*mcl_var));
+                //                err_sum += distance*distance;
             }
 
-        if(err_sum > 0)
-            p_weight = 1/err_sum;
+        //        if(err_sum > 0)
+        //            p_weight = 1/err_sum;
 
-        if(num_points > 0)
-            p_weight /= num_points;
+//        if(num_points > 0)
+//            p_weight /= num_points;
 
-        weight(p) = p_weight;
-        sum_weight += p_weight;
+        weight(p) *= prob;
+        sum_weight +=  weight(p);
     }
 
     //normalization, sum of every weight = 1
@@ -238,8 +264,11 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
         for(auto& p : particles)
         {
             weight(p) /= sum_weight;
-            sum+= weight(p);
+            w_avg += weight(p)/N_Particle;
         }
+
+    mcl_wslow += mcl_aslow*(w_avg - mcl_wslow);
+    mcl_wfast += mcl_afast*(w_avg - mcl_wfast);
 
     lowVarResampling();
 
@@ -249,8 +278,9 @@ void MCL::lowVarResampling()
 {
     Particles new_list;
     std::default_random_engine rd;  //Will be used to obtain a seed for the random number engine
-    //    std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> rg(0.0,1.0/N_Particle);
+    std::random_device x_rd, y_rd, w_rd;
+    std::uniform_real_distribution<double> rg(0.0,1.0/N_Particle), xrg(-450,450), yrg(-200,200), wrg(0,360);
+    double reset_prob = std::max(double(0.0), 1-(mcl_wfast/mcl_wslow));
     double r = rg(rd);
     double c = weight(particles[0]);
     best_estimate = particles[0];
@@ -263,16 +293,22 @@ void MCL::lowVarResampling()
 
     for(int j = 0; j < N_Particle; j++)
     {
-        double U = r+(double(j)/N_Particle);
-        while(U > c)
+        double random = ((double) rand() / (RAND_MAX));
+        if(random < reset_prob)
+            new_list.push_back(std::make_tuple(xrg(x_rd), yrg(y_rd), wrg(w_rd), 1/N_Particle));
+        else
         {
-            id +=1;
-            c += weight(particles[id]);
-        }
-        if(weight(particles[id]) > weight(best_estimate))
-            best_estimate = particles[id];
+            double U = r+((double)j/N_Particle);
+            while(U > c)
+            {
+                id +=1;
+                c += weight(particles[id]);
+            }
+            if(weight(particles[id]) > weight(best_estimate))
+                best_estimate = particles[id];
 
-        new_list.push_back(particles[id]);
+            new_list.push_back(particles[id]);
+        }
     }
 
     for(auto &p : particles)
@@ -282,7 +318,7 @@ void MCL::lowVarResampling()
         double deg = w(p) * M_PI/180;
         sin_ += sin(deg);
         cos_ += cos(deg);
-//        weight(p) = 1/N_Particle;
+        weight(p) = 1/N_Particle;
     }
 
     mean_x /= N_Particle;
@@ -327,7 +363,7 @@ void MCL::resampling()
 
 MCL::FieldMatrix::FieldMatrix()
 {
-    distance_matrix = new double[MATHEIGHT*MATWIDTH];
+    this->distance_matrix = new double[MATHEIGHT*MATWIDTH];
     //    distance_matrix = (double*)malloc(MATHEIGHT*MATWIDTH * sizeof(double));
 
 }
@@ -336,23 +372,24 @@ void MCL::FieldMatrix::loadData(std::string path)
 {
     std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary);
-    file.read((char*)distance_matrix,sizeof(double)*MATWIDTH*MATHEIGHT);
+    file.read((char*)this->distance_matrix,sizeof(double)*MATWIDTH*MATHEIGHT);
     file.close();
 
 }
 
 double MCL::FieldMatrix::distance(double x, double y)
 {
-    int x_ = (int)x+CENTERX;
-    int y_ = CENTERY-(int)y;
-    int pos = y_*MATWIDTH+x_;
+    //Accessing data from column wise
+    int x_ = int(x)+CENTERX; //-450 + 550
+    int y_ = CENTERY-int(y); //
+    int pos = y_+x_*MATHEIGHT;
     if(((x_ >= 0) && (x_ <= MATWIDTH)) && ((y_ >= 0) && (y_ <= MATHEIGHT))  && pos <= MATHEIGHT*MATWIDTH)
     {
-//        double dist = distance_matrix[pos];
-        return distance_matrix[pos];
+        double dist = (double)this->distance_matrix[pos];
+        return dist;
     }
     else
     {
-        return 200;
+        return 0.01;
     }
 }

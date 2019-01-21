@@ -52,12 +52,13 @@ public slots:
     void setMotionNoise(double x, double y, double w);
     void setVisionNoise(double x, double y);
     void loadConfig(std::string path);
+    void setMCLParam(QVector<double> param);
 
 signals:
     void publishPoints(std::vector<QPointF> linePoints);
     void publishMeanEst(State mean_estimate);
     void publishParticles(Particles particles, State mean_estimate);
-    void publishMotionNoise(double x, double y, double w);
+    void publishParam(QVector<double> param);
 
 private:
     void updatePercetion(std::vector<SensorData> linePoints);
@@ -67,7 +68,7 @@ private:
     void LineScanning();
     void saveConfig();
 
-    cv::Mat field;
+    cv::Mat field, dist;
     cv::Point3d robot_pos;
     cv::Point3d motion_delta;
 
@@ -90,6 +91,9 @@ private:
     std::string config_path;
 
     FieldMatrix field_weight;
+
+    double mcl_var, mcl_wfast, mcl_wslow;
+    double mcl_aslow, mcl_afast;
 
 
 };

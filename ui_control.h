@@ -66,7 +66,16 @@ public:
     QDoubleSpinBox *dspin_mcl_wfast;
     QLabel *label_11;
     QDoubleSpinBox *dspin_mcl_wslow;
+    QDoubleSpinBox *dspin_mcl_variance;
+    QLabel *label_3;
     QPushButton *button_mcl_reset;
+    QPushButton *button_mcl_setparam;
+    QWidget *formLayoutWidget_5;
+    QFormLayout *formLayout_5;
+    QLabel *label_12;
+    QDoubleSpinBox *dspin_mcl_afast;
+    QLabel *label_13;
+    QDoubleSpinBox *dspin_mcl_aslow;
 
     void setupUi(QWidget *Control)
     {
@@ -75,12 +84,12 @@ public:
         Control->resize(350, 350);
         tabWidget = new QTabWidget(Control);
         tabWidget->setObjectName(QStringLiteral("tabWidget"));
-        tabWidget->setGeometry(QRect(10, 20, 321, 311));
+        tabWidget->setGeometry(QRect(10, 20, 331, 311));
         tab_noise = new QWidget();
         tab_noise->setObjectName(QStringLiteral("tab_noise"));
         groupBox = new QGroupBox(tab_noise);
         groupBox->setObjectName(QStringLiteral("groupBox"));
-        groupBox->setGeometry(QRect(10, 10, 291, 121));
+        groupBox->setGeometry(QRect(10, 10, 301, 121));
         formLayoutWidget = new QWidget(groupBox);
         formLayoutWidget->setObjectName(QStringLiteral("formLayoutWidget"));
         formLayoutWidget->setGeometry(QRect(0, 20, 181, 101));
@@ -120,7 +129,7 @@ public:
         button_setnoise_vision->setGeometry(QRect(190, 30, 80, 22));
         groupBox_2 = new QGroupBox(tab_noise);
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
-        groupBox_2->setGeometry(QRect(10, 140, 291, 121));
+        groupBox_2->setGeometry(QRect(10, 140, 301, 121));
         formLayoutWidget_2 = new QWidget(groupBox_2);
         formLayoutWidget_2->setObjectName(QStringLiteral("formLayoutWidget_2"));
         formLayoutWidget_2->setGeometry(QRect(0, 20, 183, 101));
@@ -176,10 +185,10 @@ public:
         tab_robot->setObjectName(QStringLiteral("tab_robot"));
         groupBox_3 = new QGroupBox(tab_robot);
         groupBox_3->setObjectName(QStringLiteral("groupBox_3"));
-        groupBox_3->setGeometry(QRect(10, 10, 291, 121));
+        groupBox_3->setGeometry(QRect(10, 10, 301, 121));
         formLayoutWidget_3 = new QWidget(groupBox_3);
         formLayoutWidget_3->setObjectName(QStringLiteral("formLayoutWidget_3"));
-        formLayoutWidget_3->setGeometry(QRect(0, 20, 145, 101));
+        formLayoutWidget_3->setGeometry(QRect(0, 20, 151, 101));
         formLayout_3 = new QFormLayout(formLayoutWidget_3);
         formLayout_3->setObjectName(QStringLiteral("formLayout_3"));
         formLayout_3->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
@@ -200,6 +209,11 @@ public:
 
         dspin_robot_posy = new QDoubleSpinBox(formLayoutWidget_3);
         dspin_robot_posy->setObjectName(QStringLiteral("dspin_robot_posy"));
+        QSizePolicy sizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(dspin_robot_posy->sizePolicy().hasHeightForWidth());
+        dspin_robot_posy->setSizePolicy(sizePolicy);
         dspin_robot_posy->setMinimum(-400);
         dspin_robot_posy->setMaximum(400);
         dspin_robot_posy->setSingleStep(0.01);
@@ -208,6 +222,8 @@ public:
 
         dspin_robot_posw = new QDoubleSpinBox(formLayoutWidget_3);
         dspin_robot_posw->setObjectName(QStringLiteral("dspin_robot_posw"));
+        sizePolicy.setHeightForWidth(dspin_robot_posw->sizePolicy().hasHeightForWidth());
+        dspin_robot_posw->setSizePolicy(sizePolicy);
         dspin_robot_posw->setMinimum(0);
         dspin_robot_posw->setMaximum(360);
         dspin_robot_posw->setSingleStep(0.1);
@@ -232,10 +248,10 @@ public:
         button_robot_random->setGeometry(QRect(160, 80, 80, 22));
         groupBox_4 = new QGroupBox(tab_robot);
         groupBox_4->setObjectName(QStringLiteral("groupBox_4"));
-        groupBox_4->setGeometry(QRect(10, 150, 291, 121));
+        groupBox_4->setGeometry(QRect(10, 150, 301, 121));
         formLayoutWidget_4 = new QWidget(groupBox_4);
         formLayoutWidget_4->setObjectName(QStringLiteral("formLayoutWidget_4"));
-        formLayoutWidget_4->setGeometry(QRect(0, 20, 148, 101));
+        formLayoutWidget_4->setGeometry(QRect(0, 20, 165, 101));
         formLayout_4 = new QFormLayout(formLayoutWidget_4);
         formLayout_4->setObjectName(QStringLiteral("formLayout_4"));
         formLayout_4->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
@@ -247,9 +263,10 @@ public:
 
         dspin_mcl_wfast = new QDoubleSpinBox(formLayoutWidget_4);
         dspin_mcl_wfast->setObjectName(QStringLiteral("dspin_mcl_wfast"));
+        dspin_mcl_wfast->setDecimals(3);
         dspin_mcl_wfast->setMinimum(-550);
         dspin_mcl_wfast->setMaximum(550);
-        dspin_mcl_wfast->setSingleStep(0.1);
+        dspin_mcl_wfast->setSingleStep(0.01);
         dspin_mcl_wfast->setValue(0);
 
         formLayout_4->setWidget(0, QFormLayout::FieldRole, dspin_mcl_wfast);
@@ -261,15 +278,69 @@ public:
 
         dspin_mcl_wslow = new QDoubleSpinBox(formLayoutWidget_4);
         dspin_mcl_wslow->setObjectName(QStringLiteral("dspin_mcl_wslow"));
+        dspin_mcl_wslow->setDecimals(3);
         dspin_mcl_wslow->setMinimum(-400);
         dspin_mcl_wslow->setMaximum(400);
         dspin_mcl_wslow->setSingleStep(0.01);
 
         formLayout_4->setWidget(1, QFormLayout::FieldRole, dspin_mcl_wslow);
 
+        dspin_mcl_variance = new QDoubleSpinBox(formLayoutWidget_4);
+        dspin_mcl_variance->setObjectName(QStringLiteral("dspin_mcl_variance"));
+        dspin_mcl_variance->setDecimals(3);
+        dspin_mcl_variance->setMinimum(-100);
+        dspin_mcl_variance->setMaximum(100);
+        dspin_mcl_variance->setSingleStep(0.01);
+
+        formLayout_4->setWidget(2, QFormLayout::FieldRole, dspin_mcl_variance);
+
+        label_3 = new QLabel(formLayoutWidget_4);
+        label_3->setObjectName(QStringLiteral("label_3"));
+
+        formLayout_4->setWidget(2, QFormLayout::LabelRole, label_3);
+
         button_mcl_reset = new QPushButton(groupBox_4);
         button_mcl_reset->setObjectName(QStringLiteral("button_mcl_reset"));
-        button_mcl_reset->setGeometry(QRect(160, 40, 80, 22));
+        button_mcl_reset->setGeometry(QRect(239, 90, 61, 22));
+        button_mcl_setparam = new QPushButton(groupBox_4);
+        button_mcl_setparam->setObjectName(QStringLiteral("button_mcl_setparam"));
+        button_mcl_setparam->setGeometry(QRect(170, 90, 61, 22));
+        formLayoutWidget_5 = new QWidget(groupBox_4);
+        formLayoutWidget_5->setObjectName(QStringLiteral("formLayoutWidget_5"));
+        formLayoutWidget_5->setGeometry(QRect(161, 20, 151, 72));
+        formLayout_5 = new QFormLayout(formLayoutWidget_5);
+        formLayout_5->setObjectName(QStringLiteral("formLayout_5"));
+        formLayout_5->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+        formLayout_5->setContentsMargins(10, 10, 10, 10);
+        label_12 = new QLabel(formLayoutWidget_5);
+        label_12->setObjectName(QStringLiteral("label_12"));
+
+        formLayout_5->setWidget(0, QFormLayout::LabelRole, label_12);
+
+        dspin_mcl_afast = new QDoubleSpinBox(formLayoutWidget_5);
+        dspin_mcl_afast->setObjectName(QStringLiteral("dspin_mcl_afast"));
+        dspin_mcl_afast->setDecimals(3);
+        dspin_mcl_afast->setMinimum(-10);
+        dspin_mcl_afast->setMaximum(10);
+        dspin_mcl_afast->setSingleStep(0.01);
+        dspin_mcl_afast->setValue(0);
+
+        formLayout_5->setWidget(0, QFormLayout::FieldRole, dspin_mcl_afast);
+
+        label_13 = new QLabel(formLayoutWidget_5);
+        label_13->setObjectName(QStringLiteral("label_13"));
+
+        formLayout_5->setWidget(1, QFormLayout::LabelRole, label_13);
+
+        dspin_mcl_aslow = new QDoubleSpinBox(formLayoutWidget_5);
+        dspin_mcl_aslow->setObjectName(QStringLiteral("dspin_mcl_aslow"));
+        dspin_mcl_aslow->setDecimals(3);
+        dspin_mcl_aslow->setMinimum(-10);
+        dspin_mcl_aslow->setMaximum(10);
+        dspin_mcl_aslow->setSingleStep(0.01);
+
+        formLayout_5->setWidget(1, QFormLayout::FieldRole, dspin_mcl_aslow);
+
         tabWidget->addTab(tab_robot, QString());
 
         retranslateUi(Control);
@@ -302,7 +373,11 @@ public:
         groupBox_4->setTitle(QApplication::translate("Control", "MCL", Q_NULLPTR));
         label_10->setText(QApplication::translate("Control", "W Fast", Q_NULLPTR));
         label_11->setText(QApplication::translate("Control", "W Slow", Q_NULLPTR));
+        label_3->setText(QApplication::translate("Control", "Variance", Q_NULLPTR));
         button_mcl_reset->setText(QApplication::translate("Control", "Reset", Q_NULLPTR));
+        button_mcl_setparam->setText(QApplication::translate("Control", "Set", Q_NULLPTR));
+        label_12->setText(QApplication::translate("Control", "a Fast", Q_NULLPTR));
+        label_13->setText(QApplication::translate("Control", "a Slow", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab_robot), QApplication::translate("Control", "Robot", Q_NULLPTR));
     } // retranslateUi
 

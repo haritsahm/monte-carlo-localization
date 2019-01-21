@@ -13,15 +13,35 @@ Control::~Control()
     delete ui;
 }
 
-void Control::setMNoise(double x, double y, double w)
+void Control::setParam(QVector<double> param)
 {
-    ui->dspin_motion_noisex->setValue(x);
-    ui->dspin_motion_noisey->setValue(y);
-    ui->dspin_motion_noisew->setValue(w);
+    ui->dspin_motion_noisex->setValue(param[0]);
+    ui->dspin_motion_noisey->setValue(param[1]);
+    ui->dspin_motion_noisew->setValue(param[2]);
+    ui->dspin_mcl_variance->setValue(param[3]);
+    ui->dspin_mcl_wfast->setValue(param[4]);
+    ui->dspin_mcl_wslow->setValue(param[5]);
+    ui->dspin_mcl_afast->setValue(param[6]);
+    ui->dspin_mcl_aslow->setValue(param[7]);
 }
 
 void Control::on_button_mcl_reset_clicked(bool ck)
 {
+
+}
+
+void Control::on_button_mcl_setparam_clicked(bool ok)
+{
+
+    QVector<double> param;
+    param.resize(5);
+    param[0] = ui->dspin_mcl_wfast->value();
+    param[1] = ui->dspin_mcl_wslow->value();
+    param[2] = ui->dspin_mcl_variance->value();
+    param[3] = ui->dspin_mcl_afast->value();
+    param[4] = ui->dspin_mcl_aslow->value();
+
+    emit setMCLParam(param);
 
 }
 
@@ -62,7 +82,7 @@ void Control::on_button_setnoise_vision_clicked(bool ck)
 {
     double noise_x = ui->dspin_vision_noisex->value();
     double noise_y = ui->dspin_vision_noisey->value();
-\
+    \
     emit setVisionNoise(noise_x, noise_y);
 
 }

@@ -26,14 +26,16 @@ signals:
     void setPose(double x, double y, double w);
     void setMotionNoise(double x, double y, double w);
     void setVisionNoise(double x, double y);
+    void setMCLParam(QVector<double> param);
 
 public slots:
     void on_button_setnoise_vision_clicked(bool ck);
     void on_button_setnoise_motion_clicked(bool ck);
+    void on_button_mcl_setparam_clicked(bool ok);
     void on_button_mcl_reset_clicked(bool ck);
     void on_button_robot_set_clicked(bool ck);
     void on_button_robot_random_clicked(bool ck);
-    void setMNoise(double x, double y, double w);
+    void setParam(QVector<double> param);
 
 private:
     Ui::Control *ui;
