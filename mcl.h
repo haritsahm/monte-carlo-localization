@@ -43,6 +43,7 @@ public:
         double *distance_matrix;
         double distance(double x, double y);
         std::string bin_file;
+        cv::Mat field;
     };
 
 

@@ -23,6 +23,8 @@ void MCL::init()
   std::string path = "norm_dist.bin";
   field_weight.loadData(path);
 
+  field_weight.field = field;
+
   std::random_device x_rd, y_rd, w_rd;
   std::uniform_real_distribution<double> x_rgen(-FIELD_WIDTH/2,FIELD_WIDTH/2), y_rgen(-FIELD_HEIGHT/2,FIELD_HEIGHT/2), w_rgen(0,359);
 
@@ -168,6 +170,7 @@ void MCL::LineScanning()
 {
 #ifdef DEBUG_MAT
   cv::Mat alpha = cv::Mat::zeros(field.size(), CV_8UC1);
+  cv::Mat beta = cv::Mat(field.size(), CV_8UC3);
   field.copyTo(alpha);
 #endif
   std::vector<QPointF> linePoints;
@@ -199,6 +202,8 @@ void MCL::LineScanning()
 #ifdef DEBUG_MAT
         double world_x = c*point_x-s*point_y+(CENTERX + robot_pos.x);
         double world_y = (CENTERY - robot_pos.y) - (s*point_x+c*point_y);
+        if(field_weight.distance_matrix[800*int(world_x)+int(world_y)] > 0.9)
+          cv::circle(beta, cv::Point(world_x, world_y), 5, cv::Scalar(255,0 ,255));
         cv::circle(alpha, cv::Point(world_x, world_y), 5, cv::Scalar(255));
         cv::circle(alpha, cv::Point((CENTERX + robot_pos.x), (CENTERY - robot_pos.y)), 2, cv::Scalar(255));
 
@@ -213,7 +218,7 @@ void MCL::LineScanning()
   emit publishPoints(linePoints);
 
 #ifdef DEBUG_MAT
-  cv::imshow("field", alpha);
+  cv::imshow("field", beta);
   cv::waitKey(1);
 #endif
 
@@ -229,6 +234,7 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
   int num_points = linePoints.size();
   double sum_weight = 0;
   double w_avg = 0;
+  double highest = 0;
 
   int id=0;
   for(auto &p : particles)
@@ -246,23 +252,25 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
         double world_y = s*x(d)+c*y(d)+y(p);
         double distance = field_weight.distance(world_x,world_y);
 
-        if(id == 50)
-          std::cout << "Particle, Point : " << "(" << x(p) <<", " << y(p) << ") | " << world_x << ", " << world_y <<")"
-                    << " | Value : " << distance << std::endl;
-                        prob *= exp((-distance*distance)/(2*mcl_var*mcl_var));
-//        err_sum += distance*distance;
+//        if(id == 50)
+//          std::cout << "Particle, Point : " << "(" << x(p) <<", " << y(p) << ") | " << world_x << ", " << world_y <<")"
+//                    << " | Value : " << distance << std::endl;
+        prob *= exp((-distance*distance)/(2*mcl_var*mcl_var));
+        //        err_sum += distance*distance;
       }
 
-//    if(err_sum > 0)
-//      p_weight = 1/err_sum;
+    //    if(err_sum > 0)
+    //      p_weight = 1/err_sum;
 
-//    if(num_points > 0)
-//      p_weight /= num_points;
+    //    if(num_points > 0)
+    //      p_weight /= num_points;
 
     weight(p) = prob;
     sum_weight +=  weight(p);
     id++;
+
   }
+
 
   //normalization, sum of every weight = 1
   double sum = 0;
@@ -271,7 +279,12 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
     {
       weight(p) /= sum_weight;
       w_avg += weight(p)/N_Particle;
+      if(weight(p) > highest)
+        highest = weight(p);
     }
+
+  std::cout << "highest : " << highest << std::endl;
+
 
   mcl_wslow += mcl_aslow*(w_avg - mcl_wslow);
   mcl_wfast += mcl_afast*(w_avg - mcl_wfast);
@@ -285,8 +298,8 @@ void MCL::lowVarResampling()
   Particles new_list;
   std::default_random_engine rd;  //Will be used to obtain a seed for the random number engine
   std::random_device x_rd, y_rd, w_rd;
-  std::uniform_real_distribution<double> rg(0.0,1.0/N_Particle), xrg(-450,450), yrg(-200,200), wrg(0,360);
-  double reset_prob = std::max(double(0.0), 1-(mcl_wfast/mcl_wslow));
+  std::uniform_real_distribution<double> rg(0.0,1.0/N_Particle), xrg(-450,450), yrg(-300,300), wrg(0,360);
+  double reset_prob = std::max(0.0, 1-(mcl_wfast/mcl_wslow));
   double r = rg(rd);
   double c = weight(particles[0]);
   best_estimate = particles[0];
@@ -307,7 +320,6 @@ void MCL::lowVarResampling()
       double U = r+((double)(j)/N_Particle);
       while(U > c)
       {
-
         id +=1;
         c += weight(particles[id]);
       }
@@ -317,6 +329,9 @@ void MCL::lowVarResampling()
       new_list.push_back(particles[id]);
     }
   }
+
+  particles = new_list;
+
 
   for(auto &p : particles)
   {
@@ -336,7 +351,6 @@ void MCL::lowVarResampling()
   y(mean_estimate) = mean_y;
   w(mean_estimate) = orien;
 
-  particles = new_list;
 
   publishParticles(particles, mean());
 
@@ -371,6 +385,8 @@ void MCL::resampling()
 MCL::FieldMatrix::FieldMatrix()
 {
   this->distance_matrix = new double[MATHEIGHT*MATWIDTH];
+  field = cv::Mat::zeros(800, 1100, CV_64FC1);
+
   //    distance_matrix = (double*)malloc(MATHEIGHT*MATWIDTH * sizeof(double));
 
 }
@@ -382,6 +398,9 @@ void MCL::FieldMatrix::loadData(std::string path)
   file.read((char*)this->distance_matrix,sizeof(double)*MATWIDTH*MATHEIGHT);
   file.close();
 
+  for(int row = 0; row < field.rows; row++)
+    for(int col = 0; col < field.cols; col++)
+      field.at<double>(row,col) = distance_matrix[800*col+row];
 }
 
 double MCL::FieldMatrix::distance(double x, double y)
@@ -389,11 +408,13 @@ double MCL::FieldMatrix::distance(double x, double y)
   //Accessing data from column wise
   int col = int(x)+CENTERX; //column
   int row = CENTERY-int(y); //row
-//  std:: cout << "Point | Matrix :" << "(" << x << ", "<< y <<")" << "(" << col << ", "<< row << ")" << std::endl;
+  //  std:: cout << "Point | Matrix :" << "(" << x << ", "<< y <<")" << "(" << col << ", "<< row << ")" << std::endl;
   if((col >= 0) && (col <= MATWIDTH) && (row >= 0) && (row <= MATHEIGHT))
   {
-    int pos = col+row*MATHEIGHT;
-    double dist = (double)this->distance_matrix[pos];
+//    int pos = col*MATHEIGHT+row;
+//    if(pos > 1100*800)
+//      std::cout << "warning" << " | " << row << ", " << col  << std::endl;
+    double dist = field.at<double>(row, col);
     return dist;
   }
   else
