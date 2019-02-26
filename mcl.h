@@ -54,6 +54,7 @@ public slots:
     void setVisionNoise(double x, double y);
     void loadConfig(std::string path);
     void setMCLParam(QVector<double> param);
+    void resetMCL(bool status);
 
 signals:
     void publishPoints(std::vector<QPointF> linePoints);

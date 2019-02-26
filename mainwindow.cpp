@@ -43,6 +43,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     connect(control, SIGNAL(setPose(double,double,double)), this, SLOT(setPose(double, double,double)));
     connect(control, SIGNAL(setMotionNoise(double,double,double)), mcl, SLOT(setMotionNoise(double, double, double)));
     connect(control, SIGNAL(setVisionNoise(double,double)), mcl, SLOT(setVisionNoise(double,double)));
+    connect(control, SIGNAL(resetMCL(bool)), mcl, SLOT(resetMCL(bool)));
 
     qRegisterMetaType<QVector<double>>("QVector<double>");
     connect(control, SIGNAL(setMCLParam(QVector<double>)), mcl, SLOT(setMCLParam(QVector<double>)));
@@ -65,11 +66,11 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     scene = new QGraphicsScene(this);
     scene->setSceneRect((-FIELD_WIDTH/2)-BORDER, (-FIELD_HEIGHT/2)-BORDER, FIELD_WIDTH + (2*BORDER), FIELD_HEIGHT + (2*BORDER));
     ui->graphicsView->setScene(scene);
-    ui->graphicsView->scale(0.5, 0.5);
     ui->graphicsView->scene()->addItem(field);
     ui->graphicsView->scene()->addItem(robot_item);
     ui->graphicsView->scene()->addItem(white_points);
     ui->graphicsView->scene()->addItem(mcl_item);
+    ui->graphicsView->scale(0.5, 0.5);
 
     this->setWindowTitle("Monte Carlo Localization");
 
@@ -143,19 +144,11 @@ void MainWindow::onDpressed()
 void MainWindow::onQpressed()
 {
     pos_theta = -2;
-    //    if(pos_theta > 359)
-    //        pos_theta -= 360;
-    //    else if(pos_theta < 0)
-    //        pos_theta += 360;
 }
 
 void MainWindow::onEpressed()
 {
     pos_theta = 2;
-    //    if(pos_theta > 359)
-    //        pos_theta -= 360;
-    //    else if(pos_theta < 0)
-    //        pos_theta += 360;
 }
 
 void MainWindow::on_menu_open_control_triggered()

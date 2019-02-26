@@ -20,7 +20,7 @@ void MCL::init()
 
   robot_pos = cv::Point3d(0,0,0);
 
-  std::string path = "norm_dist.bin";
+  std::string path = "dist.bin";
   field_weight.loadData(path);
 
   field_weight.field = field;
@@ -42,7 +42,7 @@ void MCL::loadConfig(std::string path)
 {
   config_path = path;
   QVector<double> param;
-  param.resize(8);
+  param.resize(10);
   YAML::Node doc;
   try
   {
@@ -57,11 +57,13 @@ void MCL::loadConfig(std::string path)
   param[0] = mgauss_x = doc["mgauss_x"].as<double>();
   param[1] = mgauss_y = doc["mgauss_y"].as<double>();
   param[2] = mgauss_w = doc["mgauss_w"].as<double>();
-  param[3] = mcl_var = doc["mcl_var"].as<double>();
-  param[4] = mcl_wfast = doc["mcl_wfast"].as<double>();
-  param[5] = mcl_wslow = doc["mcl_wslow"].as<double>();
-  param[6] = mcl_afast = doc["mcl_afast"].as<double>();
-  param[7] = mcl_aslow = doc["mcl_aslow"].as<double>();
+  param[3] = vgauss_x = doc["vgauss_x"].as<double>();
+  param[4] = vgauss_y = doc["vgauss_y"].as<double>();
+  param[5] = mcl_var = doc["mcl_var"].as<double>();
+//  param[6] = mcl_wfast = doc["mcl_wfast"].as<double>();
+//  param[7] = mcl_wslow = doc["mcl_wslow"].as<double>();
+  param[8] = mcl_afast = doc["mcl_afast"].as<double>();
+  param[9] = mcl_aslow = doc["mcl_aslow"].as<double>();
 
   emit publishParam(param);
 
@@ -76,9 +78,11 @@ void MCL::saveConfig()
   out << YAML::Key << "mgauss_x" << YAML::Value << mgauss_x;
   out << YAML::Key << "mgauss_y" << YAML::Value << mgauss_y ;
   out << YAML::Key << "mgauss_w" << YAML::Value << mgauss_w ;
+  out << YAML::Key << "vgauss_x" << YAML::Value << vgauss_x ;
+  out << YAML::Key << "vgauss_y" << YAML::Value << vgauss_y ;
   out << YAML::Key << "mcl_var" << YAML::Value << mcl_var;
-  out << YAML::Key << "mcl_wfast" << YAML::Value << mcl_wfast;
-  out << YAML::Key << "mcl_wslow" << YAML::Value << mcl_wslow;
+//  out << YAML::Key << "mcl_wfast" << YAML::Value << mcl_wfast;
+//  out << YAML::Key << "mcl_wslow" << YAML::Value << mcl_wslow;
   out << YAML::Key << "mcl_afast" << YAML::Value << mcl_afast;
   out << YAML::Key << "mcl_aslow" << YAML::Value << mcl_aslow;
 
@@ -121,6 +125,8 @@ void MCL::setMotionNoise(double x, double y, double w)
 
 void MCL::setVisionNoise(double x, double y)
 {
+    vgauss_x = x; vgauss_y = y;
+    saveConfig();
 
 }
 
@@ -132,6 +138,20 @@ void MCL::setMCLParam(QVector<double> param)
   this->mcl_afast = param[3];
   this->mcl_aslow = param[4];
   saveConfig();
+}
+
+void MCL::resetMCL(bool status)
+{
+
+    std::random_device xrd, yrd, wrd;
+    std::uniform_real_distribution<double> xrg(-450,450), yrg(-300,300), wrg(0,360);
+    for(auto& p : particles)
+    {
+      x(p) = xrg(xrd);
+      y(p) = yrg(yrd);
+      w(p) = wrg(wrd);
+    }
+
 }
 
 double MCL::errorfcn(double dist)
@@ -236,7 +256,11 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
   double w_avg = 0;
   double highest = 0;
 
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::normal_distribution<> xgen(0,vgauss_x), ygen(0,vgauss_y), wgen(0,5);
   int id=0;
+
   for(auto &p : particles)
   {
     double err_sum = 0;
@@ -245,27 +269,32 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
     if(num_points !=0 )
       for(auto &d : linePoints)
       {
-        double angle_rad = w(p) * DEGREE2RADIAN;
+        double angle_rad = (w(p) + wgen(gen)) * DEGREE2RADIAN;
         double c = cos(angle_rad);
         double s = sin(angle_rad);
-        double world_x = c*x(d)-s*y(d)+x(p);
-        double world_y = s*x(d)+c*y(d)+y(p);
-        double distance = field_weight.distance(world_x,world_y);
-
+//        double world_x = c*point_x-s*point_y+(CENTERX + robot_pos.x);
+//        double world_y = (CENTERY - robot_pos.y) - (s*point_x+c*point_y);
+        double world_x = (c*x(d)-s*y(d))+x(p)+CENTERX+ xgen(gen);
+        double world_y = (CENTERY-y(p))+(-s*x(d)+c*y(d))+ ygen(gen);
+        double distance = 0;
+        if((world_x >= 0) && (world_x <= MATWIDTH) && (world_y >= 0) && (world_y <= MATHEIGHT))
+            distance = field_weight.distance_matrix[800*int(world_x)+int(world_y)];
+        else
+            distance = 200;
 //        if(id == 50)
 //          std::cout << "Particle, Point : " << "(" << x(p) <<", " << y(p) << ") | " << world_x << ", " << world_y <<")"
 //                    << " | Value : " << distance << std::endl;
-        prob *= exp((-distance*distance)/(2*mcl_var*mcl_var));
-        //        err_sum += distance*distance;
+//        prob *= exp((-distance*distance)/(2*mcl_var*mcl_var));
+                err_sum += distance;
       }
 
-    //    if(err_sum > 0)
-    //      p_weight = 1/err_sum;
+        if(err_sum > 0)
+          p_weight = 1/err_sum;
 
-    //    if(num_points > 0)
-    //      p_weight /= num_points;
+        if(num_points > 0)
+          p_weight /= num_points;
 
-    weight(p) = prob;
+    weight(p) = p_weight;
     sum_weight +=  weight(p);
     id++;
 
@@ -279,11 +308,11 @@ void MCL::updatePercetion(std::vector<SensorData> linePoints)
     {
       weight(p) /= sum_weight;
       w_avg += weight(p)/N_Particle;
-      if(weight(p) > highest)
-        highest = weight(p);
+//      if(weight(p) > highest)
+//        highest = weight(p);
     }
 
-  std::cout << "highest : " << highest << std::endl;
+//  std::cout << "highest : " << highest << std::endl;
 
 
   mcl_wslow += mcl_aslow*(w_avg - mcl_wslow);

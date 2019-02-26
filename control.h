@@ -27,7 +27,7 @@ signals:
     void setMotionNoise(double x, double y, double w);
     void setVisionNoise(double x, double y);
     void setMCLParam(QVector<double> param);
-
+    void resetMCL(bool status);
 public slots:
     void on_button_setnoise_vision_clicked(bool ck);
     void on_button_setnoise_motion_clicked(bool ck);
