@@ -112,16 +112,18 @@ MCLItem::MCLItem()
 
 QRectF MCLItem::boundingRect() const
 {
-    return QRectF(-FIELD_WIDTH/2,-FIELD_HEIGHT/2,FIELD_WIDTH,FIELD_HEIGHT);
+    return QRectF(-FIELD_WIDTH/2-BORDER,-FIELD_HEIGHT/2-BORDER,FIELD_WIDTH+2*BORDER,FIELD_HEIGHT+2*BORDER);
 }
 
 void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     painter->scale(1,-1);
 
+    int id = 0;
     painter->setBrush(Qt::blue);
     for(auto& p: particles)
     {
+
         QRectF particle_(-10, -10, 20, 20);
         double x = std::get<0>(p);
         double y = std::get<1>(p);
@@ -135,6 +137,7 @@ void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
         double rot_ly = s*40+c*0;
         painter->drawLine(QPointF(x,y), QPointF(x,y) + QPointF(rot_lx, rot_ly));
         painter->drawEllipse(particle_);
+
     }
 
     painter->setBrush(Qt::black);
@@ -156,8 +159,13 @@ void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     {
         double world_x = c*d.x()-s*d.y()+x_;
         double world_y = s*d.x()+c*d.y()+y_;
-        if(abs(world_x) > (FIELD_WIDTH/2) + GOAL_WIDTH || abs(world_y) > (FIELD_HEIGHT/2)) continue;
         painter->drawEllipse(QPointF(world_x, world_y), 5, 5);
+        if(id == 25 && id ==75)
+        {
+          painter->drawLine(QPointF(x_, y_), + QPointF(world_x, world_y));
+          id=0;
+        }
+        id++;
     }
 
     double len_y = tan(fov_horizontal)*(FIELD_WIDTH/2+20);
