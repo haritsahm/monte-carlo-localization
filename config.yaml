@@ -1,10 +1,9 @@
 mgauss_x: 5
 mgauss_y: 5
 mgauss_w: 2
-vgauss_x: 0
-vgauss_y: 0
-mcl_var: 0.8
-mcl_wfast: 0
-mcl_wslow: 0
-mcl_afast: 0.1
-mcl_aslow: 0.01
+vgauss_x: 6
+vgauss_y: 3
+mcl_vis_var: 0.493
+mcl_afast: 0.4
+mcl_aslow: 0.09
+mcl_cmps_var: 0.323

@@ -43,7 +43,6 @@ public slots:
     void updateRobotPose();
     void setLinePoints(std::vector<QPointF> linePoints);
     void setParticles(Particles particles, State mean_estimate);
-    void on_menu_open_control_triggered();
     void on_menu_loadconfig_triggered();
     void setPose(double x, double y, double w);
 

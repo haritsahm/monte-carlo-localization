@@ -77,6 +77,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     pos_x = pos_y = pos_theta = angle = 0;
     pos = prev_pos = QPointF(0,0);
 
+    control->show();
 
     robot_item->update();
     mcl->init();
@@ -151,11 +152,6 @@ void MainWindow::onEpressed()
     pos_theta = 2;
 }
 
-void MainWindow::on_menu_open_control_triggered()
-{
-    control->show();
-}
-
 void MainWindow::on_menu_loadconfig_triggered()
 {
     QString filename =  QFileDialog::getOpenFileName(
@@ -192,6 +188,7 @@ void MainWindow::setPosition(double pos_x, double pos_y)
     double t_y = -s*pos_x+c*pos_y;
 
     double dx = t_x-prev_pos.x(); double dy = t_y-prev_pos.y(); double dtheta = angle-prev_angle;
+
     emit updateOdometry(dx, dy, dtheta);
 
     white_points->setPose(pos_x, pos_y, angle);
@@ -204,6 +201,8 @@ void MainWindow::setPosition(double pos_x, double pos_y)
 
 void MainWindow::updateRobotPose()
 {
+    angle += pos_theta;
+
     double c = cos(angle*M_PI/180);
     double s = sin(angle*M_PI/180);
 
@@ -216,7 +215,6 @@ void MainWindow::updateRobotPose()
 
     pos.setX(dx);
     pos.setY(dy);
-    angle += pos_theta;
 
     if(angle > 359)
         angle -= 360;
@@ -232,7 +230,7 @@ void MainWindow::updateRobotPose()
 
     std::vector<std::pair<cv::Point, cv::Point> > scanPoints;
     double l = (FIELD_WIDTH/2+20);
-    double rad = 25;
+    double rad = 40;
 
     for(int deg = 0; deg < 35; deg+=RAD_SCAN)
     {

@@ -21,10 +21,9 @@ void Control::setParam(QVector<double> param)
     ui->dspin_vision_noisex->setValue(param[3]);
     ui->dspin_vision_noisey->setValue(param[4]);
     ui->dspin_mcl_variance->setValue(param[5]);
-    ui->dspin_mcl_wfast->setValue(param[6]);
-    ui->dspin_mcl_wslow->setValue(param[7]);
-    ui->dspin_mcl_afast->setValue(param[8]);
-    ui->dspin_mcl_aslow->setValue(param[9]);
+    ui->dspin_mcl_afast->setValue(param[6]);
+    ui->dspin_mcl_aslow->setValue(param[7]);
+    ui->dspin_mcl_cmvar->setValue(param[8]);
 }
 
 void Control::on_button_mcl_reset_clicked(bool ck)
@@ -37,12 +36,11 @@ void Control::on_button_mcl_setparam_clicked(bool ok)
 {
 
     QVector<double> param;
-    param.resize(5);
-    param[0] = ui->dspin_mcl_wfast->value();
-    param[1] = ui->dspin_mcl_wslow->value();
-    param[2] = ui->dspin_mcl_variance->value();
-    param[3] = ui->dspin_mcl_afast->value();
-    param[4] = ui->dspin_mcl_aslow->value();
+    param.resize(4);
+    param[0] = ui->dspin_mcl_variance->value();
+    param[1] = ui->dspin_mcl_afast->value();
+    param[2] = ui->dspin_mcl_aslow->value();
+    param[3] = ui->dspin_mcl_cmvar->value();
 
     emit setMCLParam(param);
 

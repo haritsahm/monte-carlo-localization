@@ -160,11 +160,6 @@ void MCLItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
         double world_x = c*d.x()-s*d.y()+x_;
         double world_y = s*d.x()+c*d.y()+y_;
         painter->drawEllipse(QPointF(world_x, world_y), 5, 5);
-        if(id == 25 && id ==75)
-        {
-          painter->drawLine(QPointF(x_, y_), + QPointF(world_x, world_y));
-          id=0;
-        }
         id++;
     }
 
