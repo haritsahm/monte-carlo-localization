@@ -13,6 +13,7 @@
 #define RAD_SCAN 6
 #define NMAX_Particle 250
 #define NMIN_Particle 20
+#define NDEF_Particle 100
 
 #define FIELD_WIDTH 900
 #define FIELD_HEIGHT 600

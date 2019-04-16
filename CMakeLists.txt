@@ -13,6 +13,8 @@ set(OpenCV_DIR "/usr/local/share/OpenCV")
 
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(OpenCV REQUIRED)
+
+set(yaml-cpp_DIR "/usr/local/lib/cmake/yaml-cpp")
 find_package(yaml-cpp REQUIRED)
 
 ## Declare a C++ executable

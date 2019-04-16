@@ -1,21 +1,13 @@
 CMakeCache.txt
 CMakeLists.txt.*
-CMakeFiles
+CMakeLists.txt.user.*
+CMakeFiles/
 CMakeScripts
-Testing
 Makefile
 cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
 *.mp4
 *.cbp
-paper.pdf
 
-# Executables
-*.exe
-*.out
-*.app
 moc_*.cpp
 mcl_viewer_automoc.cpp
 .mcl_viewer

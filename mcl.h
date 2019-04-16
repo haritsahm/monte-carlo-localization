@@ -25,7 +25,7 @@ public:
     MCL();
     void init(); // initialize variable
     void setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints); // set scan points
-    double compass_err(double angle); // calculate compass error weighting
+    double heading_err(double angle); // calculate heading error weighting
 
     struct FieldMatrix;
 
@@ -89,7 +89,7 @@ private:
 
     double cf, N_Particle; //variable for adaptive particle number
     bool reset_particle; //boolean to help when no features found
-
+    bool useAdaptiveParticle;
 };
 
 #endif // MCL_H

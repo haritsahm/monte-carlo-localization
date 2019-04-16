@@ -13,6 +13,7 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QGroupBox>
@@ -68,12 +69,13 @@ public:
     QDoubleSpinBox *dspin_mcl_variance;
     QLabel *label_12;
     QDoubleSpinBox *dspin_mcl_afast;
-    QPushButton *button_mcl_reset;
-    QPushButton *button_mcl_setparam;
     QWidget *formLayoutWidget_5;
     QFormLayout *formLayout_5;
-    QDoubleSpinBox *dspin_mcl_aslow;
     QLabel *label_13;
+    QDoubleSpinBox *dspin_mcl_aslow;
+    QPushButton *button_mcl_setparam;
+    QPushButton *button_mcl_reset;
+    QCheckBox *chkbox_adaptv;
 
     void setupUi(QWidget *Control)
     {
@@ -297,19 +299,19 @@ public:
 
         formLayout_4->setWidget(2, QFormLayout::FieldRole, dspin_mcl_afast);
 
-        button_mcl_reset = new QPushButton(groupBox_4);
-        button_mcl_reset->setObjectName(QStringLiteral("button_mcl_reset"));
-        button_mcl_reset->setGeometry(QRect(270, 90, 61, 22));
-        button_mcl_setparam = new QPushButton(groupBox_4);
-        button_mcl_setparam->setObjectName(QStringLiteral("button_mcl_setparam"));
-        button_mcl_setparam->setGeometry(QRect(190, 90, 61, 22));
         formLayoutWidget_5 = new QWidget(groupBox_4);
         formLayoutWidget_5->setObjectName(QStringLiteral("formLayoutWidget_5"));
-        formLayoutWidget_5->setGeometry(QRect(180, 20, 151, 43));
+        formLayoutWidget_5->setGeometry(QRect(170, 20, 161, 71));
         formLayout_5 = new QFormLayout(formLayoutWidget_5);
         formLayout_5->setObjectName(QStringLiteral("formLayout_5"));
+        formLayout_5->setSizeConstraint(QLayout::SetMaximumSize);
         formLayout_5->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
         formLayout_5->setContentsMargins(10, 10, 10, 10);
+        label_13 = new QLabel(formLayoutWidget_5);
+        label_13->setObjectName(QStringLiteral("label_13"));
+
+        formLayout_5->setWidget(0, QFormLayout::LabelRole, label_13);
+
         dspin_mcl_aslow = new QDoubleSpinBox(formLayoutWidget_5);
         dspin_mcl_aslow->setObjectName(QStringLiteral("dspin_mcl_aslow"));
         dspin_mcl_aslow->setDecimals(3);
@@ -319,16 +321,24 @@ public:
 
         formLayout_5->setWidget(0, QFormLayout::FieldRole, dspin_mcl_aslow);
 
-        label_13 = new QLabel(formLayoutWidget_5);
-        label_13->setObjectName(QStringLiteral("label_13"));
+        button_mcl_setparam = new QPushButton(formLayoutWidget_5);
+        button_mcl_setparam->setObjectName(QStringLiteral("button_mcl_setparam"));
 
-        formLayout_5->setWidget(0, QFormLayout::LabelRole, label_13);
+        formLayout_5->setWidget(1, QFormLayout::FieldRole, button_mcl_setparam);
 
+        button_mcl_reset = new QPushButton(formLayoutWidget_5);
+        button_mcl_reset->setObjectName(QStringLiteral("button_mcl_reset"));
+
+        formLayout_5->setWidget(1, QFormLayout::LabelRole, button_mcl_reset);
+
+        chkbox_adaptv = new QCheckBox(groupBox_4);
+        chkbox_adaptv->setObjectName(QStringLiteral("chkbox_adaptv"));
+        chkbox_adaptv->setGeometry(QRect(190, 100, 127, 20));
         tabWidget->addTab(tab_robot, QString());
 
         retranslateUi(Control);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(Control);
@@ -357,9 +367,10 @@ public:
         label_10->setText(QApplication::translate("Control", "Cmps Var", Q_NULLPTR));
         label_3->setText(QApplication::translate("Control", "Vis Var", Q_NULLPTR));
         label_12->setText(QApplication::translate("Control", "a Fast", Q_NULLPTR));
-        button_mcl_reset->setText(QApplication::translate("Control", "Reset", Q_NULLPTR));
-        button_mcl_setparam->setText(QApplication::translate("Control", "Set", Q_NULLPTR));
         label_13->setText(QApplication::translate("Control", "a Slow", Q_NULLPTR));
+        button_mcl_setparam->setText(QApplication::translate("Control", "Set", Q_NULLPTR));
+        button_mcl_reset->setText(QApplication::translate("Control", "Reset", Q_NULLPTR));
+        chkbox_adaptv->setText(QApplication::translate("Control", "Adaptive Particle", Q_NULLPTR));
         tabWidget->setTabText(tabWidget->indexOf(tab_robot), QApplication::translate("Control", "Robot", Q_NULLPTR));
     } // retranslateUi
 

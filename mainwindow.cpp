@@ -232,6 +232,10 @@ void MainWindow::updateRobotPose()
     double l = (FIELD_WIDTH/2+20);
     double rad = 40;
 
+    /*
+     * generate radial line scanning inside the robot's fov
+     */
+
     for(int deg = 0; deg < 35; deg+=RAD_SCAN)
     {
         double x1 = rad;

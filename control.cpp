@@ -6,6 +6,8 @@ Control::Control(QWidget *parent) :
     ui(new Ui::Control)
 {
     ui->setupUi(this);
+    this->setWindowTitle("Parameters Control");
+
 }
 
 Control::~Control()
@@ -24,6 +26,7 @@ void Control::setParam(QVector<double> param)
     ui->dspin_mcl_afast->setValue(param[6]);
     ui->dspin_mcl_aslow->setValue(param[7]);
     ui->dspin_mcl_cmvar->setValue(param[8]);
+    ui->chkbox_adaptv->setChecked(param[9]);
 }
 
 void Control::on_button_mcl_reset_clicked(bool ck)
@@ -36,11 +39,12 @@ void Control::on_button_mcl_setparam_clicked(bool ok)
 {
 
     QVector<double> param;
-    param.resize(4);
+    param.resize(5);
     param[0] = ui->dspin_mcl_variance->value();
     param[1] = ui->dspin_mcl_afast->value();
     param[2] = ui->dspin_mcl_aslow->value();
     param[3] = ui->dspin_mcl_cmvar->value();
+    param[4] = ui->chkbox_adaptv->isChecked();
 
     emit setMCLParam(param);
 

@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_noise">
     <attribute name="title">
@@ -498,42 +498,19 @@
        </item>
       </layout>
      </widget>
-     <widget class="QPushButton" name="button_mcl_reset">
-      <property name="geometry">
-       <rect>
-        <x>270</x>
-        <y>90</y>
-        <width>61</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Reset</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="button_mcl_setparam">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>90</y>
-        <width>61</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Set</string>
-      </property>
-     </widget>
      <widget class="QWidget" name="formLayoutWidget_5">
       <property name="geometry">
        <rect>
-        <x>180</x>
+        <x>170</x>
         <y>20</y>
-        <width>151</width>
-        <height>43</height>
+        <width>161</width>
+        <height>71</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout_5">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMaximumSize</enum>
+       </property>
        <property name="fieldGrowthPolicy">
         <enum>QFormLayout::ExpandingFieldsGrow</enum>
        </property>
@@ -549,6 +526,13 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>a Slow</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="dspin_mcl_aslow">
          <property name="decimals">
@@ -565,14 +549,34 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_13">
+       <item row="1" column="1">
+        <widget class="QPushButton" name="button_mcl_setparam">
          <property name="text">
-          <string>a Slow</string>
+          <string>Set</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="button_mcl_reset">
+         <property name="text">
+          <string>Reset</string>
          </property>
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QCheckBox" name="chkbox_adaptv">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>100</y>
+        <width>127</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Adaptive Particle</string>
+      </property>
      </widget>
     </widget>
    </widget>
