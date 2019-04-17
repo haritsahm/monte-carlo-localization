@@ -1,8 +1,8 @@
-mgauss_x: 4
-mgauss_y: 3
-mgauss_w: 4
-vgauss_x: 3
-vgauss_y: 3
+mgauss_x: 5
+mgauss_y: 4
+mgauss_w: 6
+vgauss_x: 5
+vgauss_y: 6
 mcl_vis_var: 0.49299999999999999
 mcl_afast: 0.25
 mcl_aslow: 0.080000000000000002
