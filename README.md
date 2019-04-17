@@ -34,11 +34,9 @@ Feel free to ask me, I will be very happy to discuss and learn from others. m.ha
 | Q     | -2 in Robot's Heading     |
 
 ### Requirements
-
-    1. OpenCV 3
-    2. Qt 5.9
-    3. YAML
-    4. C++11
+- [x] OpenCV 3
+- [x] Qt 5.9
+- [x] YAML
 
 ### Todo List
 
