@@ -9,6 +9,8 @@ cmake_install.cmake
 *.cbp
 
 moc_*.cpp
-mcl_viewer_automoc.cpp
-.mcl_viewer
+*_automoc.cpp
+./monte-carlo-localization
+./*
+
 

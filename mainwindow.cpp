@@ -5,9 +5,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     field = new Field;
-    //    grid = new GridMap;
     robot_item = new RobotItem;
-    white_points = new WhitePoints;
     mcl = new MCL;
     mcl_item = new MCLItem;
     control = new Control;
@@ -41,9 +39,11 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     connect(this, SIGNAL(updateOdometry(double,double,double)), mcl, SLOT(updateOdometry(double,double,double)));
     connect(this, SIGNAL(updatePose(double,double,double)), mcl, SLOT(updatePose(double,double,double)));
     connect(control, SIGNAL(setPose(double,double,double)), this, SLOT(setPose(double, double,double)));
-    connect(control, SIGNAL(setMotionNoise(double,double,double)), mcl, SLOT(setMotionNoise(double, double, double)));
-    connect(control, SIGNAL(setVisionNoise(double,double)), mcl, SLOT(setVisionNoise(double,double)));
+    connect(control, &Control::setNoise, mcl, &MCL::setNoise);
     connect(control, SIGNAL(resetMCL(bool)), mcl, SLOT(resetMCL(bool)));
+    connect(control, &Control::setFeatures, mcl, &MCL::setFeatures);
+    connect(control, &Control::setDebug, mcl, &MCL::setDebug);
+    connect(control, &Control::useHeading, mcl, &MCL::useHeading);
 
     qRegisterMetaType<QVector<double>>("QVector<double>");
     connect(control, SIGNAL(setMCLParam(QVector<double>)), mcl, SLOT(setMCLParam(QVector<double>)));
@@ -59,6 +59,9 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     qRegisterMetaType<Particles>("Particles"); qRegisterMetaType<State>("State");
     connect(mcl, SIGNAL(publishParticles(Particles,State)), this, SLOT(setParticles(Particles,State)));
 
+    connect(mcl, &MCL::publishLines, this, &MainWindow::setLineSegment);
+    connect(mcl, &MCL::publishClsPnts, this, &MainWindow::setClsPnts);
+    connect(mcl, &MCL::publishObsPnts, this, &MainWindow::setObsPnts);
 
     activeTimer->start();
 
@@ -68,7 +71,6 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     ui->graphicsView->setScene(scene);
     ui->graphicsView->scene()->addItem(field);
     ui->graphicsView->scene()->addItem(robot_item);
-    ui->graphicsView->scene()->addItem(white_points);
     ui->graphicsView->scene()->addItem(mcl_item);
     ui->graphicsView->scale(0.5, 0.5);
 
@@ -81,11 +83,18 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 
     robot_item->update();
     mcl->init();
+
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+  qApp->quit();
 }
 
 MainWindow::Field::Field()
@@ -155,14 +164,14 @@ void MainWindow::onEpressed()
 void MainWindow::on_menu_loadconfig_triggered()
 {
     QString filename =  QFileDialog::getOpenFileName(
-          this,
-          "Open Config",
-          QDir::currentPath(),
-          "All files (*.*) ;; Config files (*.yaml)");
+                this,
+                "Open Config",
+                QDir::currentPath(),
+                "All files (*.*) ;; Config files (*.yaml)");
 
     if( !filename.isNull() )
     {
-      qDebug() << "selected file path : " << filename.toUtf8();
+        qDebug() << "selected file path : " << filename.toUtf8();
     }
 
     emit loadConfig(filename.toStdString());
@@ -191,7 +200,6 @@ void MainWindow::setPosition(double pos_x, double pos_y)
 
     emit updateOdometry(dx, dy, dtheta);
 
-    white_points->setPose(pos_x, pos_y, angle);
     robot_item->update();
 
     prev_pos.setX(t_x);
@@ -229,6 +237,7 @@ void MainWindow::updateRobotPose()
     double posy =  CENTERY - pos.y(); if(posy < 0) posy = 0; else if(posy > MATHEIGHT) posy = MATHEIGHT;
 
     std::vector<std::pair<cv::Point, cv::Point> > scanPoints;
+    std::vector<cv::Point> scanArea;
     double l = (FIELD_WIDTH/2+20);
     double rad = 40;
 
@@ -255,6 +264,9 @@ void MainWindow::updateRobotPose()
         if(point2y < 0) point2y = 0; else if (point2y > MATHEIGHT) point2y = MATHEIGHT;
 
         scanPoints.push_back(std::make_pair(cv::Point(point1x, point1y), cv::Point(point2x, point2y)));
+
+        scanArea.push_back(cv::Point(point1x, point1y));
+        scanArea.push_back(cv::Point(point2x, point2y));
     }
 
     for(int deg = 0; deg < 35; deg+=RAD_SCAN)
@@ -276,9 +288,12 @@ void MainWindow::updateRobotPose()
         if(point2y < 0) point2y = 0; else if (point2y > MATHEIGHT) point2y = MATHEIGHT;
 
         scanPoints.push_back(std::make_pair(cv::Point(point1x, point1y), cv::Point(point2x, point2y)));
+        scanArea.push_back(cv::Point(point1x, point1y));
+        scanArea.push_back(cv::Point(point2x, point2y));
     }
 
     mcl->setScanPoints(scanPoints);
+    mcl->setScanArea(scanArea);
     pos_x = pos_y = pos_theta = 0;
 }
 
@@ -294,5 +309,26 @@ void MainWindow::setParticles(Particles particles, State mean_estimate)
 {
     mcl_item->setBelief(mean_estimate);
     mcl_item->setParticles(particles);
+    mcl_item->update();
+}
+
+void MainWindow::setLineSegment(std::vector<LineSegment> lineSegment)
+{
+    mcl_item->setLineSegment(lineSegment);
+    robot_item->setLineSegment(lineSegment);
+    mcl_item->update();
+    robot_item->update();
+
+}
+
+void MainWindow::setClsPnts(std::vector<QPointF> clspnts)
+{
+    robot_item->setClsPnts(clspnts);
+    robot_item->update();
+}
+
+void MainWindow::setObsPnts(std::vector<QPointF> obspnts)
+{
+    mcl_item->setObsPnts(obspnts);
     mcl_item->update();
 }

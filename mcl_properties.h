@@ -1,10 +1,13 @@
 #ifndef MCL_PROPERTIES_H
 #define MCL_PROPERTIES_H
-#include <cmath>
 #include <QtMath>
 #include <QPair>
 #include <QPoint>
 #include <vector>
+#include <opencv2/imgproc.hpp>
+#include <algorithm>
+#include <random>
+#include <math.h>
 
 #define fov_horizontal 70.42/2*M_PI/180
 #define DEGREE2RADIAN M_PI/180
@@ -79,6 +82,55 @@ inline double& y(SensorData& point)
 {
   return point.second;
 }
+
+class LineSegment
+{
+public:
+  cv::Point2d p1, p2;
+
+  LineSegment()
+  {
+    p1 = p2 = cv::Point2d(0,0);
+  }
+  LineSegment(const cv::Point2d a, const cv::Point2d b)
+  {
+    p1 = a; p2 = b;
+  }
+  LineSegment(double a, double b,double c,double d)
+  {
+    p1.x=a;
+    p1.y=b;
+    p2.x=c;
+    p2.y=d;
+  }
+  LineSegment(const LineSegment &l)
+  {
+    p1 = l.p1;
+    p2 = l.p2;
+  }
+  double lineLength()
+  {
+    double num1 = p2.x - p1.x;
+    double num2 = p2.y - p1.y;
+    return sqrt((double) num1 * (double) num1 + (double) num2 * (double) num2);
+  }
+  double distancePoint(cv::Point2d p)
+  {
+    double y21 = p2.y-p1.y;
+    double x21 = p2.x-p1.x;
+    double num = fabs((y21*p.x)-(x21*p.y)+(p2.x*p1.y)-(p2.y*p1.x));
+    double denom =  sqrt(y21*y21+x21*x21)+1e-06;
+
+    double dist = num/denom;
+    return dist;
+  }
+
+  friend std::ostream& operator <<(std::ostream& os, LineSegment& l)
+  {
+    os << "Point A: " << l.p1 << ") | Point B: (" << l.p2 << ")";
+    return os;
+  }
+};
 
 
 #endif // MCL_PROPERTIES_H

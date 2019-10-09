@@ -3,11 +3,13 @@
 
 Control::Control(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::Control)
+    ui(new Ui::Control),
+    vis_state(false)
 {
     ui->setupUi(this);
     this->setWindowTitle("Parameters Control");
 
+    ui->vision_selector->setText(QString("Field Points"));
 }
 
 Control::~Control()
@@ -22,11 +24,14 @@ void Control::setParam(QVector<double> param)
     ui->dspin_motion_noisew->setValue(param[2]);
     ui->dspin_vision_noisex->setValue(param[3]);
     ui->dspin_vision_noisey->setValue(param[4]);
-    ui->dspin_mcl_variance->setValue(param[5]);
-    ui->dspin_mcl_afast->setValue(param[6]);
-    ui->dspin_mcl_aslow->setValue(param[7]);
-    ui->dspin_mcl_cmvar->setValue(param[8]);
-    ui->chkbox_adaptv->setChecked(param[9]);
+    ui->dspin_mcl_afast->setValue(param[5]);
+    ui->dspin_mcl_aslow->setValue(param[6]);
+    ui->chkbox_adaptv->setChecked(param[7]);
+    ui->dspin_mcl_heading->setValue(param[8]);
+    ui->vision_fieldpts_var->setValue(param[9]);
+    ui->vision_pt2line_var->setValue(param[10]);
+    ui->vision_ptangle_var->setValue(param[11]);
+    ui->vision_line2line_var->setValue(param[12]);
 }
 
 void Control::on_button_mcl_reset_clicked(bool ck)
@@ -39,12 +44,15 @@ void Control::on_button_mcl_setparam_clicked(bool ok)
 {
 
     QVector<double> param;
-    param.resize(5);
-    param[0] = ui->dspin_mcl_variance->value();
-    param[1] = ui->dspin_mcl_afast->value();
-    param[2] = ui->dspin_mcl_aslow->value();
-    param[3] = ui->dspin_mcl_cmvar->value();
-    param[4] = ui->chkbox_adaptv->isChecked();
+    param.resize(8);
+    param[0] = ui->dspin_mcl_afast->value();
+    param[1] = ui->dspin_mcl_aslow->value();
+    param[2] = ui->dspin_mcl_heading->value();
+    param[3] = ui->chkbox_adaptv->isChecked();
+    param[4] = ui->vision_fieldpts_var->value();
+    param[5] =  ui->vision_pt2line_var->value();
+    param[6] =  ui->vision_ptangle_var->value();
+    param[7] =  ui->vision_line2line_var->value();
 
     emit setMCLParam(param);
 
@@ -73,21 +81,36 @@ void Control::on_button_robot_set_clicked(bool ck)
 }
 
 
-void Control::on_button_setnoise_motion_clicked(bool ck)
+void Control::on_button_setnoise_clicked(bool ck)
 {
-    double noise_x = ui->dspin_motion_noisex->value();
-    double noise_y = ui->dspin_motion_noisey->value();
-    double noise_w = ui->dspin_motion_noisew->value();
-
-    emit setMotionNoise(noise_x, noise_y, noise_w);
+    QVector<double> param_;
+    param_.resize(5);
+    param_ [0] = ui->dspin_motion_noisex->value();
+    param_ [1] = ui->dspin_motion_noisey->value();
+    param_ [2] = ui->dspin_motion_noisew->value();
+    param_ [3] =  ui->dspin_vision_noisex->value();
+    param_ [4] = ui->dspin_vision_noisey->value();
+    emit setNoise(param_);
 
 }
 
-void Control::on_button_setnoise_vision_clicked(bool ck)
+void Control::on_vision_selector_clicked(bool state)
 {
-    double noise_x = ui->dspin_vision_noisex->value();
-    double noise_y = ui->dspin_vision_noisey->value();
-    \
-    emit setVisionNoise(noise_x, noise_y);
+    vis_state = !vis_state;
+    if(vis_state)
+        ui->vision_selector->setText(QString("Field Lines"));
+    else
+        ui->vision_selector->setText(QString("Field Points"));
 
+    emit setFeatures(vis_state);
+}
+
+void Control::on_vision_debug_stateChanged(int state)
+{
+    emit setDebug(ui->vision_debug->isChecked());
+}
+
+void Control::on_vision_heading_stateChanged(int state)
+{
+    emit useHeading(ui->vision_heading->isChecked());
 }

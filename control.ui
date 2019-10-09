@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>383</width>
-    <height>350</height>
+    <width>611</width>
+    <height>422</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,37 +17,37 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>20</y>
-     <width>361</width>
-     <height>311</height>
+     <y>10</y>
+     <width>591</width>
+     <height>401</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab_noise">
     <attribute name="title">
-     <string>Noise</string>
+     <string>Localization Control</string>
     </attribute>
     <widget class="QGroupBox" name="groupBox">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>301</width>
-       <height>121</height>
+       <width>191</width>
+       <height>241</height>
       </rect>
      </property>
      <property name="title">
-      <string>Vision</string>
+      <string>Visoin Motion Noise</string>
      </property>
-     <widget class="QWidget" name="formLayoutWidget">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>20</y>
-        <width>182</width>
-        <height>101</height>
+        <width>186</width>
+        <height>211</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout">
@@ -109,67 +109,35 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-     <widget class="QPushButton" name="button_setnoise_vision">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>30</y>
-        <width>80</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Set Noise</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>140</y>
-       <width>301</width>
-       <height>121</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>Motion</string>
-     </property>
-     <widget class="QWidget" name="formLayoutWidget_2">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>20</y>
-        <width>190</width>
-        <height>101</height>
-       </rect>
-      </property>
-      <layout class="QFormLayout" name="formLayout_2">
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::ExpandingFieldsGrow</enum>
-       </property>
-       <property name="leftMargin">
-        <number>10</number>
-       </property>
-       <property name="topMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>10</number>
-       </property>
-       <property name="bottomMargin">
-        <number>10</number>
-       </property>
-       <item row="0" column="0">
+       <item row="5" column="0">
+        <widget class="QPushButton" name="button_setnoise">
+         <property name="text">
+          <string>Set Noise</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
         <widget class="QLabel" name="label_4">
          <property name="text">
           <string>X Motion Noise</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Y Motion Noise</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>W Motion Noise</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
         <widget class="QDoubleSpinBox" name="dspin_motion_noisex">
          <property name="minimum">
           <double>0.000000000000000</double>
@@ -185,7 +153,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="3" column="1">
         <widget class="QDoubleSpinBox" name="dspin_motion_noisey">
          <property name="minimum">
           <double>0.000000000000000</double>
@@ -198,7 +166,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="4" column="1">
         <widget class="QDoubleSpinBox" name="dspin_motion_noisew">
          <property name="minimum">
           <double>0.000000000000000</double>
@@ -211,48 +179,16 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Y Motion Noise</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>W Motion Noise</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
-     <widget class="QPushButton" name="button_setnoise_motion">
-      <property name="geometry">
-       <rect>
-        <x>190</x>
-        <y>30</y>
-        <width>80</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Set Noise</string>
-      </property>
-     </widget>
     </widget>
-   </widget>
-   <widget class="QWidget" name="tab_robot">
-    <attribute name="title">
-     <string>Robot</string>
-    </attribute>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>10</y>
-       <width>331</width>
-       <height>121</height>
+       <y>260</y>
+       <width>341</width>
+       <height>101</height>
       </rect>
      </property>
      <property name="title">
@@ -264,7 +200,7 @@
         <x>0</x>
         <y>20</y>
         <width>151</width>
-        <height>101</height>
+        <height>72</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout_3">
@@ -306,6 +242,13 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Y Pose</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="dspin_robot_posy">
          <property name="sizePolicy">
@@ -325,7 +268,52 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+      </layout>
+     </widget>
+     <widget class="QPushButton" name="button_robot_set">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>70</y>
+        <width>80</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Set Pose</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="button_robot_random">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>70</y>
+        <width>80</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Randomize</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>20</y>
+        <width>160</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Angle</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QDoubleSpinBox" name="dspin_robot_posw">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -344,56 +332,16 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Y Pose</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Angle</string>
-         </property>
-        </widget>
-       </item>
       </layout>
-     </widget>
-     <widget class="QPushButton" name="button_robot_set">
-      <property name="geometry">
-       <rect>
-        <x>160</x>
-        <y>40</y>
-        <width>80</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Set Pose</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="button_robot_random">
-      <property name="geometry">
-       <rect>
-        <x>160</x>
-        <y>80</y>
-        <width>80</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Randomize</string>
-      </property>
      </widget>
     </widget>
     <widget class="QGroupBox" name="groupBox_4">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>150</y>
-       <width>331</width>
-       <height>121</height>
+       <x>210</x>
+       <y>10</y>
+       <width>371</width>
+       <height>241</height>
       </rect>
      </property>
      <property name="title">
@@ -404,8 +352,8 @@
        <rect>
         <x>0</x>
         <y>20</y>
-        <width>171</width>
-        <height>101</height>
+        <width>230</width>
+        <height>221</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout_4">
@@ -425,65 +373,19 @@
         <number>10</number>
        </property>
        <item row="0" column="0">
-        <widget class="QLabel" name="label_10">
-         <property name="text">
-          <string>Cmps Var</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QDoubleSpinBox" name="dspin_mcl_cmvar">
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>-100.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.010000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Vis Var</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QDoubleSpinBox" name="dspin_mcl_variance">
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="minimum">
-          <double>-100.000000000000000</double>
-         </property>
-         <property name="maximum">
-          <double>100.000000000000000</double>
-         </property>
-         <property name="singleStep">
-          <double>0.010000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
         <widget class="QLabel" name="label_12">
          <property name="text">
           <string>a Fast</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="dspin_mcl_afast">
          <property name="decimals">
           <number>3</number>
          </property>
          <property name="minimum">
-          <double>-100.000000000000000</double>
+          <double>0.000000000000000</double>
          </property>
          <property name="maximum">
           <double>100.000000000000000</double>
@@ -496,87 +398,196 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="formLayoutWidget_5">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>20</y>
-        <width>161</width>
-        <height>71</height>
-       </rect>
-      </property>
-      <layout class="QFormLayout" name="formLayout_5">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetMaximumSize</enum>
-       </property>
-       <property name="fieldGrowthPolicy">
-        <enum>QFormLayout::ExpandingFieldsGrow</enum>
-       </property>
-       <property name="leftMargin">
-        <number>10</number>
-       </property>
-       <property name="topMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>10</number>
-       </property>
-       <property name="bottomMargin">
-        <number>10</number>
-       </property>
-       <item row="0" column="0">
+       <item row="1" column="0">
         <widget class="QLabel" name="label_13">
          <property name="text">
           <string>a Slow</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="dspin_mcl_aslow">
          <property name="decimals">
           <number>3</number>
          </property>
          <property name="minimum">
-          <double>-10.000000000000000</double>
+          <double>0.000000000000000</double>
          </property>
          <property name="maximum">
-          <double>10.000000000000000</double>
+          <double>100.000000000000000</double>
          </property>
          <property name="singleStep">
           <double>0.010000000000000</double>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="button_mcl_setparam">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_10">
          <property name="text">
-          <string>Set</string>
+          <string>Heading Var</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="button_mcl_reset">
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="dspin_mcl_heading">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Reset</string>
+          <string>Field Points var</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="vision_fieldpts_var">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>-100.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Point2Line var</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="vision_pt2line_var">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>1000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>PointAngle var</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="vision_ptangle_var">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>100.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.001000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Line2Line var</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QDoubleSpinBox" name="vision_line2line_var">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>1000.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QCheckBox" name="chkbox_adaptv">
+     <widget class="QWidget" name="verticalLayoutWidget">
       <property name="geometry">
        <rect>
-        <x>190</x>
-        <y>100</y>
-        <width>127</width>
-        <height>20</height>
+        <x>240</x>
+        <y>20</y>
+        <width>129</width>
+        <height>158</height>
        </rect>
       </property>
-      <property name="text">
-       <string>Adaptive Particle</string>
-      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QCheckBox" name="vision_heading">
+         <property name="text">
+          <string>Use Heading</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="chkbox_adaptv">
+         <property name="text">
+          <string>Adaptive Particle</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="vision_debug">
+         <property name="text">
+          <string>Debug Features</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="vision_selector">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_mcl_setparam">
+         <property name="text">
+          <string>Set Value</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="button_mcl_reset">
+         <property name="text">
+          <string>Reset Particle</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </widget>

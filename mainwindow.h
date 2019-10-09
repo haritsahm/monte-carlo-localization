@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QTransform>
 #include <QShortcut>
+#include <QCheckBox>
 #include <QtCore>
 #include <QGraphicsItem>
 #include <QKeyEvent>
@@ -32,6 +33,7 @@ public:
     ~MainWindow();
 
     void setPosition(double pos_x, double pos_y);
+    void closeEvent(QCloseEvent *event);  // Overloaded function
 
 public slots:
     void onWpressed();
@@ -42,6 +44,9 @@ public slots:
     void onEpressed();
     void updateRobotPose();
     void setLinePoints(std::vector<QPointF> linePoints);
+    void setLineSegment(std::vector<LineSegment> lineSegment);
+    void setClsPnts(std::vector<QPointF> clspnts);
+    void setObsPnts(std::vector<QPointF> obspnts);
     void setParticles(Particles particles, State mean_estimate);
     void on_menu_loadconfig_triggered();
     void setPose(double x, double y, double w);
@@ -69,30 +74,10 @@ private:
     };
 
 
-    class WhitesItem : public QGraphicsItem
-    {
-    public:
-        WhitesItem();
-        void setWhites(QVector<QPointF> whites_);
-        //    void setBelief(MCLItem::Pose2D bel_);
-        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-        QRectF boundingRect() const;
-    private:
-        void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-        void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
-        void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-    private:
-        QVector<QPointF> whites;
-        //    MCLItem::Pose2D bel;
-        QPointF hover_point;
-        bool draw_text;
-    };
-
 private:
     Field *field;
     QGraphicsScene *scene;
     RobotItem *robot_item;
-    WhitePoints *white_points;
     MCL *mcl;
     QTimer *activeTimer;
     MCLItem *mcl_item;
