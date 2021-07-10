@@ -13,7 +13,7 @@
 #include <QFileDialog>
 #include <iostream>
 #include <QTimer>
-#include "ui_mainwindow.h"
+#include <ui_mainwindow.h>
 #include "mcl_properties.h"
 #include "mcl_item.h"
 #include "mcl.h"

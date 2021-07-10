@@ -1,5 +1,5 @@
-#include "control.h"
-#include "ui_control.h"
+#include "mcl_localization/control.h"
+#include <ui_control.h>
 
 Control::Control(QWidget *parent) :
     QWidget(parent),

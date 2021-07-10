@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include "mcl_properties.h"
 #include <iostream>
@@ -83,6 +84,7 @@ private:
       return std::max(lower, std::min(n, upper));
     }
 
+    bool displayed_cv; // flag for delete gui
     cv::Mat field, dist; // cv mat to help debug
     cv::Point3d robot_pos; // original robot pos
     cv::Point3d motion_delta; // motion odometry

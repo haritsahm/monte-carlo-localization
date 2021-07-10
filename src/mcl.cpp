@@ -1,4 +1,4 @@
-#include "mcl.h"
+#include "mcl_localization/mcl.h"
 
 //Debug field points
 #define DEBUG_MAT
@@ -53,6 +53,10 @@ void MCL::init()
   expLines.insert(expLines.begin(), vertical_field_lines.begin(), vertical_field_lines.end());
   expLines.insert(expLines.end(), horizontal_field_lines.begin(), horizontal_field_lines.end());
 
+  // Initialize windows for debug
+//  cv::namedWindow("field_points");
+//  cv::namedWindow("field_lines");
+
   robot_pos = cv::Point3d(0,0,0);
 
   cf = 0; N_Particle = 100;
@@ -72,16 +76,15 @@ void MCL::init()
   mcl_fieldpts_var = 1; mcl_wslow = mcl_wfast = mcl_aslow = mcl_afast = 0;
 
   scanArea.clear();
-
-  std::string config_path = "config.yaml";
+  displayed_cv = false;
+  std::string config_path = "config/config.yaml";
   loadConfig(config_path);
 }
 
-/*
- * loadConfig()
- * Load config from file and pass them to ui
+/**
+ * @brief MCL::loadConfig load config from YAML
+ * @param[in] path path to config
  */
-
 void MCL::loadConfig(std::string path)
 {
   config_path = path;
@@ -114,11 +117,9 @@ void MCL::loadConfig(std::string path)
 
 }
 
-/*
- * saveConfig()
- * save config from to yaml
+/**
+ * @brief MCL::saveConfig save config to YAML
  */
-
 void MCL::saveConfig()
 {
   YAML::Node doc;
@@ -150,23 +151,24 @@ void MCL::saveConfig()
   fout << doc;
 }
 
-/*
- *  setFeatures()
- *  set field features
- *  true -> field lines
- *  false => field points
+/**
+ * @brief MCL::setFeatures set features to be used
+ * True -> Use field lines
+ * False -> Use field points
+ *
+ * @param state
  */
-
 void MCL::setFeatures(bool state)
 {
   field_lines = state;
 }
 
-/*
- * updateOdometry()
- * receive the odometry data from mainwindow
+/**
+ * @brief MCL::updateOdometry [SLOT] get the robot displacement
+ * @param x displacement in X
+ * @param y displacement in Y
+ * @param deg displacement in degree
  */
-
 void MCL::updateOdometry(double x, double y, double deg)
 {
   motion_delta.x = x;
@@ -177,26 +179,23 @@ void MCL::updateOdometry(double x, double y, double deg)
   updateMotion();
 }
 
-/*
- * updatePose()
- * update robot pose from mainwindow
+/**
+ * @brief MCL::updatePose update global robot pose as reference
+ * @param x
+ * @param y
+ * @param deg
  */
-
 void MCL::updatePose(double x, double y, double deg)
 {
   robot_pos.x = x;
   robot_pos.y = y;
   robot_pos.z = deg;
-
-  //    std::cout << "robot_pos : " << robot_pos << std::endl;
-
 }
 
-/*
- * setScanPoints()
- * received the pair of points to generate a line
+/**
+ * @brief MCL::setScanPoints set line segments reference for searching intersection
+ * @param scanPoints vector of LineSegments
  */
-
 void MCL::setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints)
 {
   scan_Points = scanPoints;
@@ -204,6 +203,10 @@ void MCL::setScanPoints(std::vector<std::pair<cv::Point, cv::Point> > scanPoints
 
 }
 
+/**
+ * @brief MCL::setNoise set vision and motion noises
+ * @param param
+ */
 void MCL::setNoise(QVector<double> param)
 {
   mgauss_x = param[0]; mgauss_y = param[1]; mgauss_w = param[2];
@@ -211,6 +214,10 @@ void MCL::setNoise(QVector<double> param)
   saveConfig();
 }
 
+/**
+ * @brief MCL::setMCLParam set the mcl parameters
+ * @param param QVector of paramaters
+ */
 void MCL::setMCLParam(QVector<double> param)
 {
   mcl_afast = param[0];
@@ -225,6 +232,10 @@ void MCL::setMCLParam(QVector<double> param)
   saveConfig();
 }
 
+/**
+ * @brief MCL::resetMCL reset the particle by randomly distribute them
+ * @param status
+ */
 void MCL::resetMCL(bool status)
 {
 
@@ -239,12 +250,12 @@ void MCL::resetMCL(bool status)
 
 }
 
-/*
- * heading_err()
- * calculate the weight from particle's heading error
- * using base-e exponential
+/**
+ * @brief MCL::heading_err calculate the particle heading error
+ * Particles heading error w.r.t robot's known heading
+ * @param angle particle's heading in degree
+ * @return weight from exp value
  */
-
 double MCL::heading_err(double angle)
 {
   if(angle>=360)
@@ -259,7 +270,9 @@ double MCL::heading_err(double angle)
  * updateMotion()
  * update the particle motion model from odometry
  */
-
+/**
+ * @brief MCL::updateMotion update motion model using displacement and gaussian
+ */
 void MCL::updateMotion()
 {
   std::random_device xrd, yrd, wrd;
@@ -287,12 +300,13 @@ void MCL::updateMotion()
 
 }
 
-/*
+/**
  * LineScanning()
  * Simple line scanning algorithm to recreate the radial line scanning
  * from a pair of points. The algorithm will use the cv::LineIterator to
- * iterate along a line to find any white points from knwon field lines.
+ * iterate along a line to find any white points intersect with known field lines.
  *
+ * Use simple hough line to find line segments
  * Remember that OpenCV Mat axis
  * o-------- x+
  * |
@@ -330,6 +344,7 @@ void MCL::LineScanning()
   double c = cos(robot_pos.z * DEGREE2RADIAN);
   double s = sin(robot_pos.z * DEGREE2RADIAN);
 
+  /// Find line intersection points from reference radial segments in fov
   if(!field_lines)
   {
     for(int i = 0; i < scan_Points.size(); i++)
@@ -371,6 +386,7 @@ void MCL::LineScanning()
 
   else
   {
+    /// Find field lines segment in the fov
     std::vector<std::vector<cv::Point> > temp;
     temp.push_back(scanArea);
 
@@ -381,7 +397,7 @@ void MCL::LineScanning()
     // Draw contours + hull results
     for( int i = 0; i< temp.size(); i++ )
     {
-      cv::drawContours( mask, hull, i, cv::Scalar(255), CV_FILLED);
+      cv::drawContours( mask, hull, i, cv::Scalar(255), cv::FILLED);
     }
 
     cv::bitwise_and(field, mask, line_result);
@@ -429,35 +445,47 @@ void MCL::LineScanning()
 
   if(vision_debug)
   {
+    displayed_cv = true;
     if(!field_lines)
     {
-      cv::imshow("field points", alpha);
+      cv::imshow("field_points", alpha);
     }
     else
     {
-      cv::imshow("field lines", drawing);
+      cv::imshow("field_lines", drawing);
     }
     cv::waitKey(1);
   }
-  else
-    cv::destroyAllWindows();
+  else if (displayed_cv && !vision_debug)
+  {
+      displayed_cv = false;
+//      cv::destroyAllWindows();
+  }
+
 
   obs_Lines = rawLines;
 
   if(!vision_debug)
-    if(!field_lines)
-      updatePerceptionPoints(linePoints_);
-    else
-      updatePerceptionLines(rawLines);
+  {
+      if(!field_lines)
+      {
+          updatePerceptionPoints(linePoints_);
+      }
+      else
+      {
+          updatePerceptionLines(rawLines);
+      }
+  }
 
 }
 
-/*
- * updatePerceptionPoints()
- * This is to update the particle's perception model. Calculate the particle weight
- * based on closest distance point
+/**
+ * @brief MCL::updatePerceptionPoints measurement model update using points in lines
+ * Calculate the particle weight based on Euclidean distance matrix.
+ * Ref: Robust and Real-time Self-Localization Based on Omnidirectional Vision for Soccer Robots
+ *
+ * @param linePoints
  */
-
 void MCL::updatePerceptionPoints(std::vector<SensorData> linePoints)
 {
   int num_points = linePoints.size();
@@ -513,6 +541,7 @@ void MCL::updatePerceptionPoints(std::vector<SensorData> linePoints)
 
   }
 
+  /// Augmented MCL variables
   mcl_wslow += mcl_aslow*(w_avg - mcl_wslow);
   mcl_wfast += mcl_afast*(w_avg - mcl_wfast);
 
@@ -520,22 +549,27 @@ void MCL::updatePerceptionPoints(std::vector<SensorData> linePoints)
 
 }
 
-/*
- * Get Point 2 Point distance
+/**
+ * @brief MCL::p2pDistance Distance between 2 points
+ * @param p1 first point cv::Point
+ * @param p2 second point cv::Point
+ * @return
  */
-
 double MCL::p2pDistance(cv::Point p1, cv::Point p2)
 {
-  double x12 = p1.x-p2.x;
-  double y12 = p1.y-p2.y;
-  return sqrt(x12*x12+y12*y12);
+  LineSegment l(p1, p2);
+  return l.lineLength();
 }
 
-/*
- * If a point inside a line segment, then
- * p1_d + p2_d = line length
+/**
+ * @brief MCL::pointInLine check if a point is in a line segment
+ * If a Point(p) is inside a Line(p1, p2), the distance between
+ * p->p1 + p->p2 == Line.length() or p1 -> p2
+ *
+ * @param line
+ * @param p
+ * @return
  */
-
 double MCL::pointInLine(LineSegment line, cv::Point p)
 {
 
@@ -544,12 +578,16 @@ double MCL::pointInLine(LineSegment line, cv::Point p)
   return p1_d + p2_d;
 }
 
-/*
- * To check if the observed line is inside
- * the reference line. This helps to ignore similar
- * features but has a different length
+/**
+ * @brief MCL::lineInline Check if an observed line is parallel with the reference line
+ * This helps to ignore similar features but has a different length.
+ * The observed line segment should be parallel with the reference line
+ * so the weight should be near zero.
+ *
+ * @param[in] obs Observed line segment
+ * @param[in] ref Reference line segment
+ * @return the probability weight
  */
-
 double MCL::lineInline(LineSegment obs, LineSegment ref)
 {
   double d_p1 = pointInLine(ref, obs.p1);
@@ -560,11 +598,14 @@ double MCL::lineInline(LineSegment obs, LineSegment ref)
   return (fabs(d_p1 - ref_length)+fabs(d_p2-ref_length))/100;
 }
 
-/*
- * Fidn the closest point on a line
- * to a reference point
+/**
+ * @brief MCL::closestPointinLine Computing the closest point on a Line(p1,p2) to a point
+ * Ref: https://diego.assencio.com/?index=ec3d5dfdfc0b6a0d147a656f0af332bd
+ * @param[in] l line segment L(p1,p2)
+ * @param[in] p reference point (p)
+ * @param[in] cut find the point inside the line segment [p1,p2] or along the line of p1 and p2
+ * @return cv::Point closest point in Line
  */
-
 cv::Point MCL::closestPointinLine(LineSegment &l, cv::Point p, bool cut = false)
 {
   cv::Point A = l.p1;
@@ -581,17 +622,24 @@ cv::Point MCL::closestPointinLine(LineSegment &l, cv::Point p, bool cut = false)
   return A+t*v;
 }
 
+/**
+ * @brief MCL::angle2Points calculate the angle between 2 points
+ * @param A first cv::Point
+ * @param B second cv::Point
+ * @return angle in Radian
+ */
+
 double MCL::angle2Points(cv::Point A, cv::Point B)
 {
   return atan2(A.y-B.y, A.x-B.x);
 }
 
-/*
- *  updatePerceptionLines
- * This is to update the particle's perception model. Calculate the particle weight
- * based on lines similarity
+/**
+ * @brief MCL::updatePerceptionLines measurement model update using line segments
+ * Calculate the particle weight based on lines similarity
+ *
+ * @param obsLines vector of LineSegments
  */
-
 void MCL::updatePerceptionLines(std::vector<LineSegment> obsLines)
 {
   double sum_weight = 0;
@@ -649,12 +697,19 @@ void MCL::updatePerceptionLines(std::vector<LineSegment> obsLines)
 
   }
 
+  /// Augmented MCL variables
   mcl_wslow += mcl_aslow*(w_avg - mcl_wslow);
   mcl_wfast += mcl_afast*(w_avg - mcl_wfast);
 
   lowVarResampling();
 }
 
+/**
+ * @brief MCL::lowVarResampling apply the low variance resampling
+ * Also apply the adaptive number of particles
+ * Ref:
+ * Ref: Monte Carlo Localization Based on Gyrodometry and Line-Detection
+ */
 void MCL::lowVarResampling()
 {
   Particles new_list;
@@ -675,6 +730,7 @@ void MCL::lowVarResampling()
 
   for(int j = 0; j < N_Particle; j++)
   {
+    /// Add random pose to Xt for augmented mcl
     double random = ((double) rand() / (RAND_MAX));
     if(random < reset_prob || reset_particle)
     {
@@ -683,6 +739,7 @@ void MCL::lowVarResampling()
     }
     else
     {
+      /// Low variance resampling
       double U = r+((double)(j)/N_Particle);
       while(U > c)
       {
@@ -699,7 +756,7 @@ void MCL::lowVarResampling()
   particles = new_list;
 
 
-  //adaptation of number particles
+  /// Variables for adaptive number of particles
   double dist = 0;
   double x_best = x(best_estimate);
   double y_best = y(best_estimate);
@@ -727,6 +784,8 @@ void MCL::lowVarResampling()
   y(mean_estimate) = mean_y;
   w(mean_estimate) = orien;
 
+  /// Adaptive number of particles
+  /// Ch. 3, Sec. D) Adaptation of the number of particles
   if(useAdaptiveParticle)
   {
     cf = (dist/N_Particle)/1081.6653;
@@ -754,17 +813,20 @@ void MCL::lowVarResampling()
 
 }
 
-/*
- * FieldMatrix()
- * To load the euclidean's distance lut table
+/**
+ * @brief MCL::FieldMatrix::FieldMatrix initialize the Euclidean's Look Up Table
  */
-
 MCL::FieldMatrix::FieldMatrix()
 {
   this->distance_matrix = new double[MATHEIGHT*MATWIDTH];
   field = cv::Mat::zeros(800, 1100, CV_64FC1);
 }
 
+/**
+ * @brief MCL::FieldMatrix::loadData Load from matlab binary data
+ *
+ * @param path path to Look Up Table
+ */
 void MCL::FieldMatrix::loadData(std::string path)
 {
   std::ifstream file;

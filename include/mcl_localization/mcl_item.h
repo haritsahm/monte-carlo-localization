@@ -6,7 +6,7 @@
 #include <QVector>
 #include <QObject>
 #include <QPainter>
-#include "mcl_properties.h"
+#include "mcl_localization/mcl_properties.h"
 #include <iostream>
 #include <QDebug>
 

@@ -6,7 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include <mcl_properties.h>
+#include "mcl_properties.h"
+#include <ui_control.h>
 #include <QButtonGroup>
 #include <QRadioButton>
 #include <QStateMachine>

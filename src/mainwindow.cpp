@@ -1,4 +1,5 @@
-#include "mainwindow.h"
+#include "mcl_localization/mainwindow.h"
+#include <ui_mainwindow.h>
 
 MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     QMainWindow(parent),
@@ -19,10 +20,10 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 
 
     // Locally Move Robot
-    QObject::connect(shortcutW, SIGNAL(activated()), this, SLOT(onWpressed())); // Y +
-    QObject::connect(shortcutA, SIGNAL(activated()), this, SLOT(onApressed())); // X -
-    QObject::connect(shortcutS, SIGNAL(activated()), this, SLOT(onSpressed())); // Y -
-    QObject::connect(shortcutD, SIGNAL(activated()), this, SLOT(onDpressed())); // X +
+    QObject::connect(shortcutW, SIGNAL(activated()), this, SLOT(onWpressed())); // X +
+    QObject::connect(shortcutA, SIGNAL(activated()), this, SLOT(onApressed())); // Y -
+    QObject::connect(shortcutS, SIGNAL(activated()), this, SLOT(onSpressed())); // X -
+    QObject::connect(shortcutD, SIGNAL(activated()), this, SLOT(onDpressed())); // Y +
     QObject::connect(shortcutQ, SIGNAL(activated()), this, SLOT(onQpressed())); // Theta -
     QObject::connect(shortcutE, SIGNAL(activated()), this, SLOT(onEpressed())); // Theta +
 
@@ -97,6 +98,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
   qApp->quit();
 }
 
+/**
+ * @brief MainWindow::Field::Field
+ * Soccer field lines are represented as rectagangles
+ * for visualization
+ */
 MainWindow::Field::Field()
 {
     boxes.push_back(QRect((-FIELD_WIDTH/2), -FIELD_HEIGHT/2, FIELD_WIDTH, FIELD_HEIGHT));
@@ -108,16 +114,31 @@ MainWindow::Field::Field()
 
 }
 
+/**
+ * @brief MainWindow::Field::paint
+ * To paint the soccer field and lines using QPainter
+ *
+ * @param[out] painter
+ * @param option
+ * @param widget
+ */
 void MainWindow::Field::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    // Draw green fields
     painter->setPen(Qt::transparent);
     painter->setBrush(Qt::green);
     painter->drawRect(boundingRect());
+
+    // Draw the lines using rectangles
     painter->setPen(QPen(Qt::white,5));
     painter->setBrush(Qt::transparent);
     painter->drawRects(boxes);
     painter->drawLines(lines);
+
+    //  Draw the center circle
     painter->drawEllipse(QPoint(0,0), 75, 75);
+
+    // Draw the penalty mark
     Qt::BrushStyle style = Qt::SolidPattern;
     painter->setBrush(QBrush(Qt::white, style));
     painter->drawEllipse(QPoint(0,0), 10, 10);
@@ -126,41 +147,66 @@ void MainWindow::Field::paint(QPainter *painter, const QStyleOptionGraphicsItem 
 
 }
 
+/**
+ * @brief MainWindow::Field::boundingRect
+ * @return a QRectF object that defines the soccer field dimension (Left, Top, W, H) from the center (0,0)
+ */
 QRectF MainWindow::Field::boundingRect() const
 {
     return QRectF(-FIELD_WIDTH/2-BORDER,-FIELD_HEIGHT/2-BORDER,FIELD_WIDTH+2*BORDER,FIELD_HEIGHT+2*BORDER);
 }
 
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame x-axis by +5
+ */
 void MainWindow::onWpressed()
-{
-    pos_y = 5;
-}
-
-void MainWindow::onApressed()
-{
-    pos_x = -5;
-}
-
-void MainWindow::onSpressed()
-{
-    pos_y = -5;
-}
-
-void MainWindow::onDpressed()
 {
     pos_x = 5;
 }
 
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame y-axis by -5
+ */
+void MainWindow::onApressed()
+{
+    pos_y = -5;
+}
+
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame x-axis by -5
+ */
+void MainWindow::onSpressed()
+{
+    pos_x = -5;
+}
+
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame y-axis by +5
+ */
+void MainWindow::onDpressed()
+{
+    pos_y = 5;
+}
+
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame z-axis by -2 (ccw)
+ */
 void MainWindow::onQpressed()
+{
+    pos_theta = +2;
+}
+
+/**
+ * @brief MainWindow::onWpressed Move robot in local frame z-axis by +2 (cw)
+ */
+void MainWindow::onEpressed()
 {
     pos_theta = -2;
 }
 
-void MainWindow::onEpressed()
-{
-    pos_theta = 2;
-}
-
+/**
+ * @brief MainWindow::on_menu_loadconfig_triggered Load configuration from path
+ */
 void MainWindow::on_menu_loadconfig_triggered()
 {
     QString filename =  QFileDialog::getOpenFileName(
@@ -177,6 +223,12 @@ void MainWindow::on_menu_loadconfig_triggered()
     emit loadConfig(filename.toStdString());
 }
 
+/**
+ * @brief MainWindow::setPose [SLOT] Set robot pose in global coordinate
+ * @param[in] x the position in x
+ * @param[in] y the position in y
+ * @param[in] w the heading in w
+ */
 void MainWindow::setPose(double x, double y, double w)
 {
     pos.setX(x);
@@ -185,6 +237,16 @@ void MainWindow::setPose(double x, double y, double w)
 
 }
 
+/**
+ * @brief The MainWindow::setPosition class is used to update the robot position
+ * Given global position (x,y), this function will set the current robot to (x,y)
+ * and draw it with the robot_item painter.
+ * This function will also calculate the displacement of the robot from the
+ * current position and the previous position and update it for localization data.
+ *
+ * @param pos_x
+ * @param pos_y
+ */
 void MainWindow::setPosition(double pos_x, double pos_y)
 {
     robot_item->setPose(pos_x, pos_y, angle);
@@ -193,20 +255,31 @@ void MainWindow::setPosition(double pos_x, double pos_y)
     double c = cos(angle*DEGREE2RADIAN);
     double s = sin(angle*DEGREE2RADIAN);
 
+    // transform to local frame
     double t_x = c*pos_x+s*pos_y;
     double t_y = -s*pos_x+c*pos_y;
 
+    // Calculate displacement
     double dx = t_x-prev_pos.x(); double dy = t_y-prev_pos.y(); double dtheta = angle-prev_angle;
 
+    // Update odometry or displacement
     emit updateOdometry(dx, dy, dtheta);
 
+    // Draw the robot with painter
     robot_item->update();
 
+    // Update previous pose
     prev_pos.setX(t_x);
     prev_pos.setY(t_y);
     prev_angle = angle;
 }
 
+// TODO: Explain
+/**
+ * @brief MainWindow::updateRobotPose
+ * This function will move the robot around the fields.
+ * This function also calculate the triangle area to represent the robot's FOV
+ */
 void MainWindow::updateRobotPose()
 {
     angle += pos_theta;
@@ -215,6 +288,7 @@ void MainWindow::updateRobotPose()
     double s = sin(angle*M_PI/180);
 
     //Local robot navigation
+    // Add local movement to the robot global coordinate
 
     double d_x = c*(pos.x()) +s*(pos.y());
     double d_y = -s*(pos.x()) +c*(pos.y());
@@ -241,8 +315,11 @@ void MainWindow::updateRobotPose()
     double l = (FIELD_WIDTH/2+20);
     double rad = 40;
 
-    /*
-     * generate radial line scanning inside the robot's fov
+    // TODO: Explain
+    /**
+     * generate line segments inside the robot's fov using radial something something
+     * don't know how to explain. This is to simulate how humanoid robot find line intersection points
+     *
      */
 
     for(int deg = 0; deg < 35; deg+=RAD_SCAN)
@@ -297,6 +374,10 @@ void MainWindow::updateRobotPose()
     pos_x = pos_y = pos_theta = 0;
 }
 
+/**
+ * @brief MainWindow::setLinePoints [SLOT]
+ * @param linePoints
+ */
 void MainWindow::setLinePoints(std::vector<QPointF> linePoints)
 {
     robot_item->setLinePoints(linePoints);
@@ -305,6 +386,11 @@ void MainWindow::setLinePoints(std::vector<QPointF> linePoints)
     mcl_item->update();
 }
 
+/**
+ * @brief MainWindow::setParticles [SLOT] to draw and update particles position
+ * @param[in] particles vector of Particles(x,y,z,weight) calculated by mcl
+ * @param[in] mean_estimate a Particle as the mean from particles distribution
+ */
 void MainWindow::setParticles(Particles particles, State mean_estimate)
 {
     mcl_item->setBelief(mean_estimate);
@@ -312,6 +398,10 @@ void MainWindow::setParticles(Particles particles, State mean_estimate)
     mcl_item->update();
 }
 
+/**
+ * @brief MainWindow::setLineSegment [SLOT] draw and update line segments detected by robot
+ * @param[in] lineSegment vector of LineSegments (p1x, p1y, p2x, p2y)
+ */
 void MainWindow::setLineSegment(std::vector<LineSegment> lineSegment)
 {
     mcl_item->setLineSegment(lineSegment);
@@ -321,12 +411,22 @@ void MainWindow::setLineSegment(std::vector<LineSegment> lineSegment)
 
 }
 
+// TODO: Explain
+/**
+ * @brief MainWindow::setClsPnts [SLOT] draw and update vector for visual debug
+ * @param[in] clspnts vector of circular
+ */
 void MainWindow::setClsPnts(std::vector<QPointF> clspnts)
 {
     robot_item->setClsPnts(clspnts);
     robot_item->update();
 }
 
+// TODO: Explain
+/**
+ * @brief MainWindow::setObsPnts [SLOT] draw and update vector for visual debug
+ * @param[in] obspnts
+ */
 void MainWindow::setObsPnts(std::vector<QPointF> obspnts)
 {
     mcl_item->setObsPnts(obspnts);
