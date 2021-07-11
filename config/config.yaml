@@ -6,7 +6,7 @@ mcl_heading_var: 0.323
 mcl_ptangle_var: 0.4
 vgauss_y: 3
 mgauss_y: 3
-mcl_aslow: 0.06
+mcl_aslow: 0.01
 useAdaptiveParticle: false
 mcl_afast: 0.1
 vgauss_x: 5

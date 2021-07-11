@@ -18,6 +18,10 @@
 #include "mcl_item.h"
 #include "mcl.h"
 #include "control.h"
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <cmath>
 #include <opencv2/imgproc.hpp>
 
 namespace Ui {

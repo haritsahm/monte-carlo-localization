@@ -11,6 +11,7 @@
 
 #define fov_horizontal 70.42/2*M_PI/180
 #define DEGREE2RADIAN M_PI/180
+#define RADIAN2DEGREE 180/M_PI
 
 #define GRID_SIZE 20
 #define RAD_SCAN 6

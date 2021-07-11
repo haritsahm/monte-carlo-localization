@@ -255,12 +255,16 @@ void MainWindow::setPosition(double pos_x, double pos_y)
     double c = cos(angle*DEGREE2RADIAN);
     double s = sin(angle*DEGREE2RADIAN);
 
-    // transform to local frame
+    // transform current pose to local frame
     double t_x = c*pos_x+s*pos_y;
     double t_y = -s*pos_x+c*pos_y;
 
+    // transform previous pose to local frame
+    double pt_x = c*prev_pos.x()+s*prev_pos.y();
+    double pt_y = -s*prev_pos.x()+c*prev_pos.y();
+
     // Calculate displacement
-    double dx = t_x-prev_pos.x(); double dy = t_y-prev_pos.y(); double dtheta = angle-prev_angle;
+    double dx = t_x-pt_x; double dy = t_y - pt_y; double dtheta = angle-prev_angle;
 
     // Update odometry or displacement
     emit updateOdometry(dx, dy, dtheta);
@@ -269,8 +273,8 @@ void MainWindow::setPosition(double pos_x, double pos_y)
     robot_item->update();
 
     // Update previous pose
-    prev_pos.setX(t_x);
-    prev_pos.setY(t_y);
+    prev_pos.setX(pos_x);
+    prev_pos.setY(pos_y);
     prev_angle = angle;
 }
 
@@ -289,7 +293,6 @@ void MainWindow::updateRobotPose()
 
     //Local robot navigation
     // Add local movement to the robot global coordinate
-
     double d_x = c*(pos.x()) +s*(pos.y());
     double d_y = -s*(pos.x()) +c*(pos.y());
     double dx = c*(d_x + pos_x) -s*(d_y + pos_y);
@@ -372,6 +375,9 @@ void MainWindow::updateRobotPose()
     mcl->setScanPoints(scanPoints);
     mcl->setScanArea(scanArea);
     pos_x = pos_y = pos_theta = 0;
+
+    // Control update at 30 Hz
+    std::this_thread::sleep_for(std::chrono::milliseconds(33));
 }
 
 /**
